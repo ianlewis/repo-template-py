@@ -172,7 +172,7 @@ license-headers: ## Update license headers.
 #####################################################################
 
 .PHONY: format
-format: json-format md-format yaml-format ## Format all files
+format: json-format md-format py-format yaml-format ## Format all files
 
 .PHONY: json-format
 json-format: node_modules/.installed ## Format JSON files.
@@ -218,6 +218,21 @@ md-format: node_modules/.installed ## Format Markdown files.
 		--write \
 		$${files}
 
+.PHONY: py-format
+py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
+	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
+	ruff format $${files}
+
 .PHONY: yaml-format
 yaml-format: node_modules/.installed ## Format YAML files.
 	@# bash \
@@ -243,7 +258,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint commitlint fixme markdownlint renovate-config-validator textlint yamllint zizmor ## Run all linters.
+lint: actionlint commitlint fixme markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -379,6 +394,21 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 renovate-config-validator: node_modules/.installed ## Validate Renovate configuration.
 	@# bash \
 	./node_modules/.bin/renovate-config-validator --strict
+
+.PHONY: ruff
+ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
+	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
+	ruff check $${files}
 
 .PHONY: textlint
 textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textlint linter.
