@@ -37,7 +37,10 @@ AQUA_REPO ?= github.com/aquaproj/aqua
 AQUA_CHECKSUM.Linux.x86_64 = 0e665447d1ce73cb3baeb50c0c2e8ee61e7086e7d1dc3a049083282421918140
 AQUA_CHECKSUM ?= $(AQUA_CHECKSUM.$(uname_s).$(uname_m))
 AQUA_URL = https://$(AQUA_REPO)/releases/download/$(AQUA_VERSION)/aqua_$(kernel)_$(arch).tar.gz
-AQUA_ROOT_DIR = $(REPO_ROOT)/.aqua
+export AQUA_ROOT_DIR = $(REPO_ROOT)/.aqua
+
+# Ensure that aqua and aqua installed tools are in the PATH.
+export PATH := $(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$(PATH)
 
 # The help command prints targets in groups. Help documentation in the Makefile
 # uses comments with double hash marks (##). Documentation is printed by the
@@ -79,13 +82,36 @@ help: ## Print all Makefile targets (this message).
 				} \
 			}'
 
-package-lock.json: package.json
+package-lock.json: package.json $(AQUA_ROOT_DIR)/.installed
 	@# bash \
 	loglevel="silent"; \
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
 		loglevel="verbose"; \
 	fi; \
-	npm --loglevel="$${loglevel}" install --package-lock-only --no-audit --no-fund
+	# NOTE: npm install will happily ignore the fact that integrity hashes are \
+	# missing in the package-lock.json. We need to check for missing integrity \
+	# fields ourselves. If any are missing, then we need to regenerate the \
+	# package-lock.json from scratch. \
+	nointegrity=""; \
+	noresolved=""; \
+	if [ -f "$@" ]; then \
+		nointegrity=$$(jq '.packages | del(."") | .[] | select(has("integrity") | not)' < $@); \
+		noresolved=$$(jq '.packages | del(."") | .[] | select(has("resolved") | not)' < $@); \
+	fi; \
+	if [ ! -f "$@" ] || [ -n "$${nointegrity}" ] || [ -n "$${noresolved}" ]; then \
+		# NOTE: package-lock.json is removed to ensure that npm includes the \
+		# integrity field. npm install will not restore this field if \
+		# missing in an existing package-lock.json file. \
+		rm -f $@; \
+		npm --loglevel="$${loglevel}" install \
+			--no-audit \
+			--no-fund; \
+	else \
+		npm --loglevel="$${loglevel}" install \
+			--package-lock-only \
+			--no-audit \
+			--no-fund; \
+	fi; \
 
 node_modules/.installed: package-lock.json
 	@# bash \
@@ -229,8 +255,6 @@ py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	ruff format $${files}
 
 .PHONY: yaml-format
@@ -273,8 +297,6 @@ actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		actionlint \
 			-format '{{range $$err := .}}::error file={{$$err.Filepath}},line={{$$err.Line}},col={{$$err.Column}}::{{$$err.Message}}%0A```%0A{{replace $$err.Snippet "\\n" "%0A"}}%0A```\n{{end}}' \
@@ -297,7 +319,7 @@ commitlint: node_modules/.installed ## Run commitlint linter.
 		# last commit by default. \
 		current_branch=$$(git rev-parse --abbrev-ref HEAD); \
 		if [ "$${commitlint_from}" == "$${current_branch}" ]; then \
-			commintlint_from="HEAD~1"; \
+			commitlint_from="HEAD~1"; \
 		fi; \
 		commitlint_to="HEAD"; \
 	fi; \
@@ -311,8 +333,6 @@ commitlint: node_modules/.installed ## Run commitlint linter.
 .PHONY: fixme
 fixme: $(AQUA_ROOT_DIR)/.installed ## Check for outstanding FIXMEs.
 	@# bash \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	output="default"; \
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		output="github"; \
@@ -340,8 +360,6 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		exit_code=0; \
 		while IFS="" read -r p && [ -n "$$p" ]; do \
@@ -406,8 +424,6 @@ ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	ruff check $${files}
 
 .PHONY: textlint
@@ -423,8 +439,6 @@ textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textli
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		exit_code=0; \
 		while IFS="" read -r p && [ -n "$$p" ]; do \
@@ -504,8 +518,6 @@ zizmor: .venv/.installed ## Runs the zizmor linter.
 .PHONY: todos
 todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
 	@# bash \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	output="default"; \
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		output="github"; \
