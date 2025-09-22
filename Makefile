@@ -255,8 +255,6 @@ py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	ruff format $${files}
 
 .PHONY: yaml-format
@@ -426,8 +424,6 @@ ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	PATH="$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION):$(AQUA_ROOT_DIR)/bin:$${PATH}"; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)"; \
 	ruff check $${files}
 
 .PHONY: textlint
