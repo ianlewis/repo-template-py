@@ -125,7 +125,7 @@ node_modules/.installed: package-lock.json
 
 .venv/bin/activate:
 	@# bash \
-	python -m venv .venv
+	python3 -m venv .venv
 
 .venv/.installed: requirements-dev.txt .venv/bin/activate
 	@# bash \
@@ -155,20 +155,22 @@ $(AQUA_ROOT_DIR)/.installed: .aqua.yaml .bin/aqua-$(AQUA_VERSION)/aqua
 ## Build
 #####################################################################
 
-# TODO: Add all target dependencies.
 .PHONY: all
-all: ## Build everything.
+all: format lint test package ## Run all tests and build a release package.
+
+package: .venv/.installed ## Create a release package.
 	@# bash \
-	echo "Nothing to build."
+	$(REPO_ROOT)/.venv/bin/python3 -m build
 
 ## Testing
 #####################################################################
 
-# TODO: Add test target dependencies.
 .PHONY: test
-test: ## Run all tests.
+test: lint unit-tests ## Run all linters and tests.
+
+unit-tests: .venv/.installed ## Run unit tests.
 	@# bash \
-	echo "Nothing to test."
+	$(REPO_ROOT)/.venv/bin/python3 -m unittest discover .
 
 ## Formatting
 #####################################################################
@@ -213,7 +215,6 @@ license-headers: ## Update license headers.
 			'*.py' \
 			'*.rb' \
 			'*.rs' \
-			'*.toml' \
 			'*.yaml' \
 			'*.yml' \
 			'Makefile' \
@@ -236,34 +237,6 @@ license-headers: ## Update license headers.
 				"$${filename}"; \
 		fi; \
 	done
-
-## Formatting
-#####################################################################
-
-.PHONY: format
-format: json-format md-format py-format yaml-format ## Format all files
-
-.PHONY: json-format
-json-format: node_modules/.installed ## Format JSON files.
-	@# bash \
-	loglevel="log"; \
-	if [ -n "$(DEBUG_LOGGING)" ]; then \
-		loglevel="debug"; \
-	fi; \
-	files=$$( \
-		git ls-files --deduplicate \
-			'*.json' \
-			'*.json5' \
-			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
-	); \
-	if [ "$${files}" == "" ]; then \
-		exit 0; \
-	fi; \
-	./node_modules/.bin/prettier \
-		--log-level "$${loglevel}" \
-		--no-error-on-unmatched-pattern \
-		--write \
-		$${files}
 
 .PHONY: md-format
 md-format: node_modules/.installed ## Format Markdown files.
@@ -547,7 +520,7 @@ yamllint: .venv/.installed ## Runs the yamllint linter.
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		format="github"; \
 	fi; \
-	.venv/bin/yamllint \
+	$(REPO_ROOT)/.venv/bin/yamllint \
 		--strict \
 		--config-file .yamllint.yaml \
 		--format "$${format}" \
@@ -575,7 +548,7 @@ zizmor: .venv/.installed ## Runs the zizmor linter.
 			--format sarif \
 			$${files} > zizmor.sarif.json; \
 	fi; \
-	.venv/bin/zizmor \
+	$(REPO_ROOT)/.venv/bin/zizmor \
 		--config .zizmor.yml \
 		--quiet \
 		--pedantic \
@@ -601,8 +574,12 @@ todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
 
 .PHONY: clean
 clean: ## Delete temporary files.
-	@$(RM) -r .bin
+	@$(RM) -r .bin/
 	@$(RM) -r $(AQUA_ROOT_DIR)
-	@$(RM) -r .venv
-	@$(RM) -r node_modules
+	@$(RM) -r .venv/
+	@$(RM) -r node_modules/
 	@$(RM) *.sarif.json
+	@$(RM) -r dist/
+	@$(RM) -r *.egg-info/
+	@python3 -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
+	@python3 -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"

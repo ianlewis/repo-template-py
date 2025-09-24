@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright 2025 Ian Lewis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A sample Python application."""
+"""Unit tests for main."""
 
 import io
-import sys
+import unittest
+
+from main import main
 
 
-def main(out: io.TextIOBase) -> None:
-    """Execute the application."""
-    out.write("Hello, World!")
+class TestMain(unittest.TestCase):
+    """Unit tests for main.main."""
 
-
-if __name__ == "__main__":
-    main(sys.stdout)
+    def test_main(self) -> None:
+        """Test main function output."""
+        out = io.StringIO()
+        main(out)
+        self.assertEqual(out.getvalue(), "Hello, World!")
