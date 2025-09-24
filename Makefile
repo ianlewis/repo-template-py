@@ -129,7 +129,7 @@ node_modules/.installed: package-lock.json
 
 .venv/.installed: requirements-dev.txt .venv/bin/activate
 	@# bash \
-	./.venv/bin/pip install -r $< --require-hashes; \
+	$(REPO_ROOT)/.venv/bin/pip install -r $< --require-hashes; \
 	touch $@
 
 .bin/aqua-$(AQUA_VERSION)/aqua:
@@ -146,14 +146,57 @@ $(AQUA_ROOT_DIR)/.installed: .aqua.yaml .bin/aqua-$(AQUA_VERSION)/aqua
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
 		loglevel="debug"; \
 	fi; \
-	AQUA_ROOT_DIR="$(AQUA_ROOT_DIR)" ./.bin/aqua-$(AQUA_VERSION)/aqua \
+	$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION)/aqua \
 		--log-level "$${loglevel}" \
 		--config .aqua.yaml \
 		install; \
 	touch $@
 
-## Tools
+## Build
 #####################################################################
+
+# TODO: Add all target dependencies.
+.PHONY: all
+all: ## Build everything.
+	@# bash \
+	echo "Nothing to build."
+
+## Testing
+#####################################################################
+
+# TODO: Add test target dependencies.
+.PHONY: test
+test: ## Run all tests.
+	@# bash \
+	echo "Nothing to test."
+
+## Formatting
+#####################################################################
+
+.PHONY: format
+format: json-format license-headers md-format yaml-format ## Format all files
+
+.PHONY: json-format
+json-format: node_modules/.installed ## Format JSON files.
+	@# bash \
+	loglevel="log"; \
+	if [ -n "$(DEBUG_LOGGING)" ]; then \
+		loglevel="debug"; \
+	fi; \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.json' \
+			'*.json5' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	$(REPO_ROOT)/node_modules/.bin/prettier \
+		--log-level "$${loglevel}" \
+		--no-error-on-unmatched-pattern \
+		--write \
+		$${files}
 
 .PHONY: license-headers
 license-headers: ## Update license headers.
@@ -184,7 +227,7 @@ license-headers: ## Update license headers.
 	fi; \
 	for filename in $${files}; do \
 		if ! ( head "$${filename}" | grep -iL "Copyright" > /dev/null ); then \
-			./third_party/mbrukman/autogen/autogen.sh \
+			$(REPO_ROOT)/third_party/mbrukman/autogen/autogen.sh \
 				--in-place \
 				--no-code \
 				--no-tlc \
@@ -238,7 +281,7 @@ md-format: node_modules/.installed ## Format Markdown files.
 		exit 0; \
 	fi; \
 	# NOTE: prettier uses .editorconfig for tab-width. \
-	./node_modules/.bin/prettier \
+	$(REPO_ROOT)/node_modules/.bin/prettier \
 		--log-level "$${loglevel}" \
 		--no-error-on-unmatched-pattern \
 		--write \
@@ -272,7 +315,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	./node_modules/.bin/prettier \
+	$(REPO_ROOT)/node_modules/.bin/prettier \
 		--log-level "$${loglevel}" \
 		--no-error-on-unmatched-pattern \
 		--write \
@@ -282,7 +325,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint commitlint fixme markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
+lint: actionlint checkmake commitlint fixme markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -303,7 +346,33 @@ actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
 			-ignore 'SC2016:' \
 			$${files}; \
 	else \
-		actionlint $${files}; \
+		actionlint \
+			-ignore 'SC2016:' \
+			$${files}; \
+	fi
+
+.PHONY: checkmake
+checkmake: $(AQUA_ROOT_DIR)/.installed ## Runs the checkmake linter.
+	@# bash \
+	# NOTE: We need to ignore config files used in tests. \
+	files=$$( \
+		git ls-files --deduplicate \
+			'Makefile' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+		# TODO: Remove newline from the format string after updating checkmake. \
+		checkmake \
+			--config .checkmake.ini \
+			--format '::error file={{.FileName}},line={{.LineNumber}}::{{.Rule}}: {{.Violation}}'$$'\n' \
+			$${files}; \
+	else \
+		checkmake \
+			--config .checkmake.ini \
+			$${files}; \
 	fi
 
 .PHONY: commitlint
@@ -323,7 +392,7 @@ commitlint: node_modules/.installed ## Run commitlint linter.
 		fi; \
 		commitlint_to="HEAD"; \
 	fi; \
-	./node_modules/.bin/commitlint \
+	$(REPO_ROOT)/node_modules/.bin/commitlint \
 		--config commitlint.config.mjs \
 		--from "$${commitlint_from}" \
 		--to "$${commitlint_to}" \
@@ -369,12 +438,12 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 			message=$$(echo "$$p" | jq -cr '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
 			exit_code=1; \
 			echo "::error file=$${file},line=$${line},endLine=$${endline}::$${message}"; \
-		done <<< "$$(./node_modules/.bin/markdownlint --config .markdownlint.yaml --dot --json $${files} 2>&1 | jq -c '.[]')"; \
+		done <<< "$$($(REPO_ROOT)/node_modules/.bin/markdownlint --config .markdownlint.yaml --dot --json $${files} 2>&1 | jq -c '.[]')"; \
 		if [ "$${exit_code}" != "0" ]; then \
 			exit "$${exit_code}"; \
 		fi; \
 	else \
-		./node_modules/.bin/markdownlint \
+		$(REPO_ROOT)/node_modules/.bin/markdownlint \
 			--config .markdownlint.yaml \
 			--dot \
 			$${files}; \
@@ -397,12 +466,12 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 			message=$$(echo "$$p" | jq -cr '.ruleNames[0] + "/" + .ruleNames[1] + " " + .ruleDescription + " [Detail: \"" + .errorDetail + "\", Context: \"" + .errorContext + "\"]"'); \
 			exit_code=1; \
 			echo "::error file=$${file},line=$${line},endLine=$${endline}::$${message}"; \
-		done <<< "$$(./node_modules/.bin/markdownlint --config .github/template.markdownlint.yaml --dot --json $${files} 2>&1 | jq -c '.[]')"; \
+		done <<< "$$($(REPO_ROOT)/node_modules/.bin/markdownlint --config .github/template.markdownlint.yaml --dot --json $${files} 2>&1 | jq -c '.[]')"; \
 		if [ "$${exit_code}" != "0" ]; then \
 			exit "$${exit_code}"; \
 		fi; \
 	else \
-		./node_modules/.bin/markdownlint \
+		$(REPO_ROOT)/node_modules/.bin/markdownlint \
 			--config .github/template.markdownlint.yaml \
 			--dot \
 			$${files}; \
@@ -411,7 +480,8 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 .PHONY: renovate-config-validator
 renovate-config-validator: node_modules/.installed ## Validate Renovate configuration.
 	@# bash \
-	./node_modules/.bin/renovate-config-validator --strict
+	$(REPO_ROOT)/node_modules/.bin/renovate-config-validator \
+		--strict
 
 .PHONY: ruff
 ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
@@ -453,10 +523,10 @@ textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textli
 				exit_code=1; \
 				echo "::error file=$${file},line=$${line},endLine=$${endline},col=$${col},endColumn=$${endcol}::$${message}"; \
 			done <<<"$$(echo "$$p" | jq -cr '.messages[] // empty')"; \
-		done <<< "$$(./node_modules/.bin/textlint -c .textlintrc.yaml --format json $${files} 2>&1 | jq -c '.[]')"; \
+		done <<< "$$($(REPO_ROOT)/node_modules/.bin/textlint -c .textlintrc.yaml --format json $${files} 2>&1 | jq -c '.[]')"; \
 		exit "$${exit_code}"; \
 	else \
-		./node_modules/.bin/textlint \
+		$(REPO_ROOT)/node_modules/.bin/textlint \
 			--config .textlintrc.yaml \
 			$${files}; \
 	fi
@@ -531,10 +601,8 @@ todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
 
 .PHONY: clean
 clean: ## Delete temporary files.
-	@# bash \
-	rm -rf \
-		.bin \
-		$(AQUA_ROOT_DIR) \
-		.venv \
-		node_modules \
-		*.sarif.json
+	@$(RM) -r .bin
+	@$(RM) -r $(AQUA_ROOT_DIR)
+	@$(RM) -r .venv
+	@$(RM) -r node_modules
+	@$(RM) *.sarif.json

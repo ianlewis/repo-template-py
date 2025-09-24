@@ -1,6 +1,16 @@
 {
   "checksums": [
     {
+      "id": "github_release/github.com/checkmake/checkmake/0.2.2/checkmake-0.2.2.darwin.amd64",
+      "checksum": "AFAA325D2348043F9A60D3D7BA7803A0A54B760095EA03837C4DE357C75478EF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/checkmake/checkmake/0.2.2/checkmake-0.2.2.linux.amd64",
+      "checksum": "BEDD033B06F2563809855EC2A9950C7A81ACEA6CD82937FD2F124E2C1C5FC3D5",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/astral-sh/ruff/0.12.9/ruff-aarch64-apple-darwin.tar.gz",
       "checksum": "68CB47F9A98E17C59E861C3B635B32C5212DEFD21A4EC0B5C1D56950D06076E5",
       "algorithm": "sha256"
