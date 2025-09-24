@@ -1,15 +1,17 @@
-# `repo-template`
+# `repo-template-py`
 
 <!-- TODO: update badge urls -->
 
-[![tests](https://github.com/ianlewis/repo-template/actions/workflows/pull_request.tests.yml/badge.svg)](https://github.com/ianlewis/repo-template/actions/workflows/pull_request.tests.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ianlewis/repo-template/badge)](https://securityscorecards.dev/viewer/?uri=github.com%2Fianlewis%2Frepo-template)
+[![tests](https://github.com/ianlewis/repo-template-py/actions/workflows/pull_request.tests.yml/badge.svg)](https://github.com/ianlewis/repo-template-py/actions/workflows/pull_request.tests.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ianlewis/repo-template-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com%2Fianlewis%2Frepo-template-py)
 
 <!-- TODO: Update README contents. -->
 
+Repository template for Python projects under `github.com/ianlewis`.
+
 This repository template is maintained for use in repositories under
-`github.com/ianlewis`. However, it can be used as a general purpose repository
-starter template.
+`github.com/ianlewis`. However, it can be used as a general purpose Python
+repository starter template.
 
 ## Goals
 
@@ -91,6 +93,8 @@ don't need to be pre-installed:
 - [`mbrukman/autogen`]: For adding license headers (vendored in `third_party`).
 - [`prettier`]: For formatting markdown and YAML files (installed in local
   `node_modules`).
+- [`ruff`]: For formatting and linting Python code (installed by Aqua in
+  `.aqua`).
 - [`shellcheck`]: For linting shell code in GitHub Actions workflows (installed
   by Aqua in `.aqua`).
 - [`textlint`]: For spelling checks (installed in local `node_modules`).
@@ -104,7 +108,7 @@ don't need to be pre-installed:
 ## Usage
 
 The repository is organized to be as self-contained as possible. Commands are
-implemented in the project [Makefile](#makefile).
+implemented in the project [`Makefile`](#makefile).
 
 ### Makefile
 
@@ -114,7 +118,7 @@ and their descriptions grouped by function.
 
 ```shell
 $ make
-repo-template Makefile
+repo-template-py Makefile
 Usage: make [COMMAND]
 
   help                      Print all Makefile targets (this message).
@@ -127,6 +131,7 @@ Formatting
   json-format               Format JSON files.
   license-headers           Update license headers.
   md-format                 Format Markdown files.
+  py-format                 Format Python files.
   yaml-format               Format YAML files.
 Linting
   lint                      Run all linters.
@@ -136,6 +141,7 @@ Linting
   fixme                     Check for outstanding FIXMEs.
   markdownlint              Runs the markdownlint linter.
   renovate-config-validator Validate Renovate configuration.
+  ruff                      Runs the ruff linter.
   textlint                  Runs the textlint linter.
   yamllint                  Runs the yamllint linter.
   zizmor                    Runs the zizmor linter.
@@ -250,6 +256,7 @@ to achieve the highest Tier and score as possible.
     - [ ] `formatting / formatting`
     - [ ] `markdownlint / markdownlint`
     - [ ] `renovate-config-validator / renovate-config-validator`
+    - [ ] `ruff / ruff`
     - [ ] `textlint / textlint`
     - [ ] `fixme / fixme`
     - [ ] `yamllint / yamllint`
@@ -316,24 +323,14 @@ commit on your commit history.
 
 ```shell
 # One time step: Add the repository template as a remote.
-git remote add repo-template git@github.com:ianlewis/repo-template.git
+git remote add repo-template-py git@github.com:ianlewis/repo-template-py.git
 
 # Fetch the latest version of the repo-template.
-git fetch repo-template main
+git fetch repo-template-py main
 
 # Create a new squash merge commit.
-git merge --no-edit --signoff --squash --allow-unrelated-histories repo-template/main
+git merge --no-edit --signoff --squash --allow-unrelated-histories repo-template-py/main
 ```
-
-## Language-specific templates
-
-A number of language specific templates based on this template are also available:
-
-| Language              | Repository                                                                  |
-| --------------------- | --------------------------------------------------------------------------- |
-| Go                    | [`ianlewis/repo-template-go`](https://github.com/ianlewis/repo-template-go) |
-| Python                | [`ianlewis/repo-template-py`](https://github.com/ianlewis/repo-template-py) |
-| TypeScript/JavaScript | [`ianlewis/repo-template-ts`](https://github.com/ianlewis/repo-template-ts) |
 
 ## Contributing
 
@@ -355,6 +352,7 @@ documentation.
 [`jq`]: https://jqlang.org/
 [`markdownlint`]: https://github.com/DavidAnson/markdownlint
 [`prettier`]: https://prettier.io/
+[`ruff`]: https://docs.astral.sh/ruff/
 [`shellcheck`]: https://www.shellcheck.net/
 [`textlint`]: https://textlint.github.io/
 [`todos`]: https://github.com/ianlewis/todos

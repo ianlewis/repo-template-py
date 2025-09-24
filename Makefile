@@ -237,6 +237,33 @@ license-headers: ## Update license headers.
 		fi; \
 	done
 
+## Formatting
+#####################################################################
+
+.PHONY: format
+format: json-format md-format py-format yaml-format ## Format all files
+
+.PHONY: json-format
+json-format: node_modules/.installed ## Format JSON files.
+	@# bash \
+	loglevel="log"; \
+	if [ -n "$(DEBUG_LOGGING)" ]; then \
+		loglevel="debug"; \
+	fi; \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.json' \
+			'*.json5' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	./node_modules/.bin/prettier \
+		--log-level "$${loglevel}" \
+		--no-error-on-unmatched-pattern \
+		--write \
+		$${files}
 
 .PHONY: md-format
 md-format: node_modules/.installed ## Format Markdown files.
@@ -259,6 +286,19 @@ md-format: node_modules/.installed ## Format Markdown files.
 		--no-error-on-unmatched-pattern \
 		--write \
 		$${files}
+
+.PHONY: py-format
+py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	ruff format $${files}
 
 .PHONY: yaml-format
 yaml-format: node_modules/.installed ## Format YAML files.
@@ -285,7 +325,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint checkmake commitlint fixme markdownlint renovate-config-validator textlint yamllint zizmor ## Run all linters.
+lint: actionlint checkmake commitlint fixme markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -442,6 +482,19 @@ renovate-config-validator: node_modules/.installed ## Validate Renovate configur
 	@# bash \
 	$(REPO_ROOT)/node_modules/.bin/renovate-config-validator \
 		--strict
+
+.PHONY: ruff
+ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	ruff check $${files}
 
 .PHONY: textlint
 textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textlint linter.
