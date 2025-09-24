@@ -2,3 +2,33 @@
 # TODO: Update package metadata
 name = "repo-template-py"
 version = "0.1.0"
+authors = [
+  { name="Ian Lewis", email="ian@ianlewis.org" },
+]
+description = "A small example package"
+readme = "README.md"
+# NOTE: this should be compatible with the `.python-version` file.
+requires-python = ">=3.13.5"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+
+[project.urls]
+Homepage = "https://github.com/ianlewis/repo-template-py"
+Issues = "https://github.com/ianlewis/repo-template-py/issues"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["third_party*", "node_modules*"]
+
+[tool.ruff.lint]
+ignore = [
+    "PT009", # pytest-unittest-assertion: allow unittest assertions
+    "FIX002", # line-contains-todo: Allow TODO comments. Handled by todos.
+]
