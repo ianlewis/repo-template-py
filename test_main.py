@@ -1,4 +1,3 @@
----
 # Copyright 2025 Ian Lewis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
-# aqua - Declarative CLI Version Manager
-# https://aquaproj.github.io/
-checksum:
-  enabled: true
-  require_checksum: true
-  supported_envs:
-    - all
-registries:
-  - type: standard
-    ref: v4.398.0 # renovate: depName=aquaproj/aqua-registry
-packages:
-  - name: rhysd/actionlint@v1.7.7
-  - name: koalaman/shellcheck@v0.11.0
-  - name: jqlang/jq@jq-1.8.1
-  - name: ianlewis/todos@v0.13.0
-  - name: checkmake/checkmake@0.2.2
-  - name: astral-sh/ruff@0.12.9
+
+"""Unit tests for main."""
+
+import io
+import unittest
+
+from main import main
+
+
+class TestMain(unittest.TestCase):
+    """Unit tests for main.main."""
+
+    def test_main(self) -> None:
+        """Test main function output."""
+        out = io.StringIO()
+        main(out)
+        self.assertEqual(out.getvalue(), "Hello, World!")
