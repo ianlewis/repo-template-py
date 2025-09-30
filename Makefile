@@ -467,7 +467,11 @@ ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	ruff check $${files}
+	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+		ruff check --output-format=github $${files}; \
+	else \
+		ruff check $${files}; \
+	fi
 
 .PHONY: textlint
 textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textlint linter.
