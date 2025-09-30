@@ -35,14 +35,23 @@ Homepage = "https://github.com/ianlewis/repo-template-py"
 Issues = "https://github.com/ianlewis/repo-template-py/issues"
 
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+# TODO(github.com/ianlewis/repo-template-py/issues/14): Manage the setuptools version automatically.
+requires = ["setuptools == 80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 exclude = ["third_party*", "node_modules*"]
 
+[tool.ruff]
+# In addition to the standard set of exclusions, omit all tests, plus a specific file.
+extend-exclude = ["third_party"]
+
 [tool.ruff.lint]
+select = ["ALL"]
 ignore = [
     "PT009", # pytest-unittest-assertion: allow unittest assertions
     "FIX002", # line-contains-todo: Allow TODO comments. Handled by todos.
+
+    "D203", # incorrect-blank-line-before-class. Incompatible with D211
+    "D212", # multi-line-summary-first-line. Incompatible with D213
 ]
