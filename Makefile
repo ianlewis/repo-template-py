@@ -176,7 +176,7 @@ unit-tests: .venv/.installed ## Run unit tests.
 #####################################################################
 
 .PHONY: format
-format: json-format license-headers md-format yaml-format ## Format all files
+format: json-format license-headers md-format py-format yaml-format ## Format all files
 
 .PHONY: json-format
 json-format: node_modules/.installed ## Format JSON files.
@@ -271,6 +271,7 @@ py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
+	ruff check --select I --fix $${files}; \
 	ruff format $${files}
 
 .PHONY: yaml-format
