@@ -166,11 +166,12 @@ package: .venv/.installed ## Create a release package.
 #####################################################################
 
 .PHONY: test
-test: lint unit-tests ## Run all linters and tests.
+test: lint unit-test ## Run all linters and tests.
 
-unit-tests: .venv/.installed ## Run unit tests.
+unit-test: .venv/.installed ## Run unit tests.
 	@# bash \
-	$(REPO_ROOT)/.venv/bin/python3 -m unittest discover .
+	$(REPO_ROOT)/.venv/bin/coverage run -m unittest discover .; \
+	$(REPO_ROOT)/.venv/bin/coverage report -m
 
 ## Formatting
 #####################################################################
@@ -586,5 +587,6 @@ clean: ## Delete temporary files.
 	@$(RM) *.sarif.json
 	@$(RM) -r dist/
 	@$(RM) -r *.egg-info/
+	@$(RM) -r .coverage
 	@python3 -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
 	@python3 -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"

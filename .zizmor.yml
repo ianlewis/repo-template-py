@@ -26,3 +26,6 @@ rules:
 
         # Allow the use of the ossf/scorecard-action
         - ossf/scorecard-action
+
+        # Allow the use of the official Codecov Action
+        - codecov/codecov-action

@@ -31,6 +31,13 @@ permissions:
 #       just a human-readable label.
 
 jobs:
+  # tests
+  ###############################
+  unit-test:
+    uses: ./.github/workflows/workflow_call.unit-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   # formatting
   ###############################
   formatting:
