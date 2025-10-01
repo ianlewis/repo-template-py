@@ -3,6 +3,7 @@
 <!-- TODO: update badge urls -->
 
 [![tests](https://github.com/ianlewis/repo-template-py/actions/workflows/pull_request.tests.yml/badge.svg)](https://github.com/ianlewis/repo-template-py/actions/workflows/pull_request.tests.yml)
+[![Codecov](https://codecov.io/gh/ianlewis/repo-template-py/graph/badge.svg?token=SV6L15VB0A)](https://codecov.io/gh/ianlewis/repo-template-py)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ianlewis/repo-template-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com%2Fianlewis%2Frepo-template-py)
 
 <!-- TODO: Update README contents. -->
@@ -179,6 +180,15 @@ user.name`.
 
 Files are checked for the existence license headers in status checks.
 
+### Testing
+
+Running `make test` will run all tests including linters. This target is meant to run
+all tests necessary to validate code for deployment including unit tests, integration
+tests, and end-to-end tests.
+
+Running `make unit-test` will run unit tests only. This target will generate coverage
+using `coverage.py` and output the results to `.coverage`.
+
 ## Project documentation
 
 This repository template includes stub documentation. Examples of
@@ -253,12 +263,13 @@ to achieve the highest Tier and score as possible.
     - [ ] `actionlint / actionlint`
     - [ ] `checkmake / checkmake`
     - [ ] `commitlint / commitlint`
+    - [ ] `fixme / fixme`
     - [ ] `formatting / formatting`
     - [ ] `markdownlint / markdownlint`
     - [ ] `renovate-config-validator / renovate-config-validator`
     - [ ] `ruff / ruff`
     - [ ] `textlint / textlint`
-    - [ ] `fixme / fixme`
+    - [ ] `unit-test / unit-test`
     - [ ] `yamllint / yamllint`
     - [ ] `zizmor / zizmor`
 
@@ -300,6 +311,13 @@ The following tools should be added to the required code scanning results.
        Get alerts when secrets are detected in the repository.
 4. [ ] **Push protection:**
        Block pushing commits with secrets in them.
+
+#### Secrets and variables / Actions
+
+Add the repository to [Codecov](https://codecov.io/) for code coverage. View the Codecov
+[Quick Start Guide](https://docs.codecov.com/docs/quick-start) for more information.
+
+- [ ] **`CODECOV_TOKEN`:** add the repository upload token as a repository secret.
 
 ## Conventional commits
 

@@ -21,6 +21,8 @@ rules:
   spelling:
     language: "en"
     skipPatterns:
+      - "Codecov" # Code coverage service
+
       - "CHANGELOG"
       - "CODEOWNER"
       - "CLA"
