@@ -171,6 +171,7 @@ test: lint unit-test ## Run all linters and tests.
 unit-test: .venv/.installed ## Run unit tests.
 	@# bash \
 	$(REPO_ROOT)/.venv/bin/coverage run -m unittest discover .; \
+	$(REPO_ROOT)/.venv/bin/coverage xml; \
 	$(REPO_ROOT)/.venv/bin/coverage report -m
 
 ## Formatting
