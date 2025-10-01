@@ -42,5 +42,5 @@ jobs:
         if: ${{ env.CODECOV_TOKEN != '' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: .coverage
+          files: coverage.xml
           fail_ci_if_error: true
