@@ -74,6 +74,6 @@ jobs:
 
   zizmor:
     permissions:
-      contents: read
-      security-events: write
+      contents: read # Required for private repositories.
+      security-events: write # Required upload the SARIF results
     uses: ./.github/workflows/workflow_call.zizmor.yml
