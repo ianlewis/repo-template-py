@@ -303,7 +303,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint checkmake commitlint fixme format-check markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
+lint: actionlint checkmake commitlint fixme format-check markdownlint mypy renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -478,6 +478,21 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 			--dot \
 			$${files}; \
 	fi
+
+.PHONY: mypy
+mypy: .venv/.installed ## Runs the mypy type checker.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	${REPO_ROOT}/.venv/bin/mypy \
+		--config-file mypy.ini \
+		$${files}
 
 .PHONY: renovate-config-validator
 renovate-config-validator: node_modules/.installed ## Validate Renovate configuration.
