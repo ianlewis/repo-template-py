@@ -124,9 +124,11 @@ Usage: make [COMMAND]
 
   help                      Print all Makefile targets (this message).
 Build
-  all                       Build everything.
+  all                       Run all tests and build a release package.
+  package                   Create a release package.
 Testing
-  test                      Run all tests.
+  test                      Run all linters and tests.
+  unit-test                 Run unit tests.
 Formatting
   format                    Format all files
   json-format               Format JSON files.
@@ -140,6 +142,7 @@ Linting
   checkmake                 Runs the checkmake linter.
   commitlint                Run commitlint linter.
   fixme                     Check for outstanding FIXMEs.
+  format-check              Check that files are properly formatted.
   markdownlint              Runs the markdownlint linter.
   renovate-config-validator Validate Renovate configuration.
   ruff                      Runs the ruff linter.
@@ -263,8 +266,8 @@ to achieve the highest Tier and score as possible.
     - [ ] `actionlint / actionlint`
     - [ ] `checkmake / checkmake`
     - [ ] `commitlint / commitlint`
+    - [ ] `format-check / format-check`
     - [ ] `fixme / fixme`
-    - [ ] `formatting / formatting`
     - [ ] `markdownlint / markdownlint`
     - [ ] `renovate-config-validator / renovate-config-validator`
     - [ ] `ruff / ruff`

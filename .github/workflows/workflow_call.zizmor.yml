@@ -24,8 +24,8 @@ jobs:
     name: zizmor
     runs-on: ubuntu-latest
     permissions:
-      contents: read # Required for private repositories.
-      security-events: write # Required to upload SARIF results.
+      contents: read # Needed for private repositories.
+      security-events: write # Needed to upload SARIF results.
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -52,7 +52,7 @@ jobs:
         # NOTE: Uploading SARIF requires GitHub Enterprise and GitHub Advanced Security license for private repositories.
         # TODO: Remove the next line for private repositories with GitHub Advanced Security.
         if: github.event.repository.private == false
-        uses: github/codeql-action/upload-sarif@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
+        uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           sarif_file: zizmor.sarif.json
           category: zizmor

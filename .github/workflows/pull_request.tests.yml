@@ -38,10 +38,10 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  # formatting
+  # format-check
   ###############################
-  formatting:
-    uses: ./.github/workflows/workflow_call.formatting.yml
+  format-check:
+    uses: ./.github/workflows/workflow_call.format-check.yml
 
   # linters
   ###############################
@@ -74,6 +74,6 @@ jobs:
 
   zizmor:
     permissions:
-      contents: read # Required for private repositories.
-      security-events: write # Required upload the SARIF results
+      contents: read # Needed for private repositories.
+      security-events: write # Needed to upload SARIF results.
     uses: ./.github/workflows/workflow_call.zizmor.yml

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: formatting
+name: format-check
 
 on:
   workflow_call:
@@ -22,30 +22,22 @@ permissions:
 
 jobs:
   formatting:
-    name: formatting
+    name: format-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           submodules: true
           persist-credentials: false
+
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: ".node-version"
-      # TODO(github.com/ianlewis/repo-template/issues/288): Use make format-check target.
-      - name: format
+
+      - name: format-check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Set the git user for the license-headers target.
           git config user.name "Unknown"
-          make format
-      - name: check diff
-        run: |
-          set -euo pipefail
-          if [ "$(GIT_PAGER="cat" git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
-              echo "Detected formatting changes.  See status below:"
-              echo "::group::git diff"
-              GIT_PAGER="cat" git diff
-              echo "::endgroup::"
-              exit 1
-          fi
+          make format-check

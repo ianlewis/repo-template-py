@@ -13,6 +13,7 @@ node_modules/
 # Python caches and build directories.
 *.py[cod]
 *.egg-info/
+build/
 dist/
 __pycache__
 

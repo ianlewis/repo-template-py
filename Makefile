@@ -32,9 +32,9 @@ REPO_ROOT = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 REPO_NAME = $(shell basename "$(REPO_ROOT)")
 
 # renovate: datasource=github-releases depName=aquaproj/aqua versioning=loose
-AQUA_VERSION ?= v2.53.8
+AQUA_VERSION ?= v2.55.0
 AQUA_REPO ?= github.com/aquaproj/aqua
-AQUA_CHECKSUM.Linux.x86_64 = 0e665447d1ce73cb3baeb50c0c2e8ee61e7086e7d1dc3a049083282421918140
+AQUA_CHECKSUM.Linux.x86_64 = cb7780962ca651c4e025a027b7bfc82c010af25c5c150fe89ad72f4058d46540
 AQUA_CHECKSUM ?= $(AQUA_CHECKSUM.$(uname_s).$(uname_m))
 AQUA_URL = https://$(AQUA_REPO)/releases/download/$(AQUA_VERSION)/aqua_$(kernel)_$(arch).tar.gz
 export AQUA_ROOT_DIR = $(REPO_ROOT)/.aqua
@@ -84,7 +84,7 @@ help: ## Print all Makefile targets (this message).
 
 package-lock.json: package.json $(AQUA_ROOT_DIR)/.installed
 	@# bash \
-	loglevel="silent"; \
+	loglevel="notice"; \
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
 		loglevel="verbose"; \
 	fi; \
@@ -156,8 +156,9 @@ $(AQUA_ROOT_DIR)/.installed: .aqua.yaml .bin/aqua-$(AQUA_VERSION)/aqua
 #####################################################################
 
 .PHONY: all
-all: format lint test package ## Run all tests and build a release package.
+all: format test package ## Run all tests and build a release package.
 
+.PHONY: package
 package: .venv/.installed ## Create a release package.
 	@# bash \
 	$(REPO_ROOT)/.venv/bin/python3 -m build
@@ -168,6 +169,7 @@ package: .venv/.installed ## Create a release package.
 .PHONY: test
 test: lint unit-test ## Run all linters and tests.
 
+.PHONY: unit-test
 unit-test: .venv/.installed ## Run unit tests.
 	@# bash \
 	$(REPO_ROOT)/.venv/bin/coverage run -m unittest discover .; \
@@ -301,7 +303,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint checkmake commitlint fixme markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
+lint: actionlint checkmake commitlint fixme format-check markdownlint renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -357,7 +359,14 @@ commitlint: node_modules/.installed ## Run commitlint linter.
 	commitlint_from=$(COMMITLINT_FROM_REF); \
 	commitlint_to=$(COMMITLINT_TO_REF); \
 	if [ "$${commitlint_from}" == "" ]; then \
-		commitlint_from=$$(git remote show origin | grep 'HEAD branch' | awk '{print $$NF}'); \
+		# Try to get the default branch without hitting the remote server \
+		if git symbolic-ref --short refs/remotes/origin/HEAD >/dev/null 2>&1; then \
+			commitlint_from=$$(git symbolic-ref --short refs/remotes/origin/HEAD); \
+		elif git show-ref refs/remotes/origin/master >/dev/null 2>&1; then \
+			commitlint_from="origin/master"; \
+		else \
+			commitlint_from="origin/main"; \
+		fi; \
 	fi; \
 	if [ "$${commitlint_to}" == "" ]; then \
 		# if head is on the commitlint_from branch, then we will lint the \
@@ -388,6 +397,23 @@ fixme: $(AQUA_ROOT_DIR)/.installed ## Check for outstanding FIXMEs.
 	todos \
 		--output "$${output}" \
 		--todo-types="FIXME,Fixme,fixme,BUG,Bug,bug,XXX,COMBAK"
+
+.PHONY: format-check
+format-check: ## Check that files are properly formatted.
+	@# bash \
+	if [ -n "$$(git diff)" ]; then \
+		>&2 echo "The working directory is dirty. Please commit, stage, or stash changes and try again."; \
+		exit 1; \
+	fi; \
+	make format; \
+	exit_code=0; \
+	if [ -n "$$(git diff)" ]; then \
+		>&2 echo "Some files need to be formatted. Please run 'make format' and try again."; \
+		git --no-pager diff; \
+		exit_code=1; \
+	fi; \
+	git restore .; \
+	exit "$${exit_code}"
 
 .PHONY: markdownlint
 markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the markdownlint linter.
@@ -589,5 +615,6 @@ clean: ## Delete temporary files.
 	@$(RM) -r dist/
 	@$(RM) -r *.egg-info/
 	@$(RM) -r .coverage
+	@$(RM) -r coverage.xml
 	@python3 -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
 	@python3 -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"

@@ -83,16 +83,17 @@ end-to-end (e2e) tests, static and dynamic analysis tools, and use of
 memory-safe languages.
 
 We aim to fix issues discovered by analysis tools as quickly as possible. We
-prefer to add these tools to "pre-submit" checks on PRs so that issues are
-never added to the code in the first place.
+prefer to add these tools to GitHub status checks on pull requests so that
+issues are never added to the code in the first place.
 
 In general, we observe the following security-conscious practices during
 development (This is not an exhaustive list).
 
-- Where possible, all PRs are reviewed by at least one [CODEOWNER](./CODEOWNERS).
-- All unit and linter pre-submit tests must pass before a PRs is merged. See
-  the [pre-submits](./CONTRIBUTING.md#pre-submits) section of the Contributor
-  Guide for more information.
+- Where possible, all pull requests are reviewed by at least one
+  [CODEOWNER](./CODEOWNERS) that is not a pull request author.
+- All unit and linter status checks must pass before a pull request is merged.
+  See the [status checks](./CONTRIBUTING.md#status-checks) section of the
+  Contributor Guide for more information.
 - All releases include no known test or linter failures.
 - We refrain from using memory-unsafe languages (e.g. C, C++) or memory-unsafe
   use of languages that are memory-safe by default (e.g. the Go
