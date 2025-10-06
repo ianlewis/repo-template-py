@@ -144,6 +144,7 @@ Linting
   fixme                     Check for outstanding FIXMEs.
   format-check              Check that files are properly formatted.
   markdownlint              Runs the markdownlint linter.
+  mypy                      Runs the mypy type checker.
   renovate-config-validator Validate Renovate configuration.
   ruff                      Runs the ruff linter.
   textlint                  Runs the textlint linter.
@@ -269,6 +270,7 @@ to achieve the highest Tier and score as possible.
     - [ ] `format-check / format-check`
     - [ ] `fixme / fixme`
     - [ ] `markdownlint / markdownlint`
+    - [ ] `mypy / mypy`
     - [ ] `renovate-config-validator / renovate-config-validator`
     - [ ] `ruff / ruff`
     - [ ] `textlint / textlint`
