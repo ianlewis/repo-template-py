@@ -21,6 +21,8 @@ rules:
   spelling:
     language: "en"
     skipPatterns:
+      - "/\\bCodecov\\b/" # Code coverage service
+
       - "/\\bCHANGELOG\\b/g"
       - "/\\bCODEOWNER\\b/g"
       - "/\\bCLA\\b/g"
