@@ -409,7 +409,13 @@ format-check: ## Check that files are properly formatted.
 	exit_code=0; \
 	if [ -n "$$(git diff)" ]; then \
 		>&2 echo "Some files need to be formatted. Please run 'make format' and try again."; \
+		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+			echo "::group::git diff"; \
+		fi; \
 		git --no-pager diff; \
+		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+			echo "::endgroup::"; \
+		fi; \
 		exit_code=1; \
 	fi; \
 	git restore .; \
