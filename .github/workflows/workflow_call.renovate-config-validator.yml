@@ -33,4 +33,7 @@ jobs:
         with:
           node-version-file: ".node-version"
 
-      - run: make renovate-config-validator
+      - name: renovate-config-validator
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make renovate-config-validator
