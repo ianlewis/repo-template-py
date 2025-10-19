@@ -31,6 +31,13 @@ permissions:
 #       just a human-readable label.
 
 jobs:
+  # tests
+  ###############################
+  unit-test:
+    uses: ./.github/workflows/workflow_call.unit-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   # format-check
   ###############################
   format-check:
@@ -53,8 +60,14 @@ jobs:
   markdownlint:
     uses: ./.github/workflows/workflow_call.markdownlint.yml
 
+  mypy:
+    uses: ./.github/workflows/workflow_call.mypy.yml
+
   renovate-config-validator:
     uses: ./.github/workflows/workflow_call.renovate-config-validator.yml
+
+  ruff:
+    uses: ./.github/workflows/workflow_call.ruff.yml
 
   textlint:
     uses: ./.github/workflows/workflow_call.textlint.yml
