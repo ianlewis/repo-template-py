@@ -9,3 +9,14 @@ node_modules/
 
 # SARIF files
 *.sarif.json
+
+# Python caches and build directories.
+*.py[cod]
+*.egg-info/
+build/
+dist/
+__pycache__
+
+# Coverage files
+.coverage
+coverage.xml

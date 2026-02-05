@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rules:
-  forbidden-uses:
-    config:
-      allow:
-        # Allow the use of official GitHub Actions
-        - actions/*
-        # Allow the use of official GitHub CodeQL Actions
-        - github/codeql-action/*
+"""Unit tests for main."""
 
-        # Allow the use of the todo-issue-reopener action
-        - ianlewis/todo-issue-reopener
+import io
+import unittest
 
-        # Allow the use of the ossf/scorecard-action
-        - ossf/scorecard-action
+from main import main
 
-        # Allow the use of the official Codecov Action
-        - codecov/codecov-action
+
+class TestMain(unittest.TestCase):
+    """Unit tests for main.main."""
+
+    def test_main(self) -> None:
+        """Test main function output."""
+        out = io.StringIO()
+        main(out)
+        self.assertEqual(out.getvalue(), "Hello, World!")
