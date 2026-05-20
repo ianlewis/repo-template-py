@@ -146,7 +146,7 @@ node_modules/.installed: package.json | package-lock.json
 
 .venv/bin/activate:
 	@# bash \
-	python -m venv .venv
+	python3 -m venv .venv
 
 .venv/.installed: requirements-dev.txt .venv/bin/activate
 	@# bash \
@@ -176,25 +176,32 @@ $(AQUA_ROOT_DIR)/.installed: $(REPO_ROOT)/.aqua.yaml $(REPO_ROOT)/.bin/aqua-$(AQ
 ## Build
 #####################################################################
 
-# TODO: Add all target dependencies.
 .PHONY: all
-all: test ## Build everything.
+all: format test package ## Run all tests and build a release package.
+
+.PHONY: package
+package: .venv/.installed ## Create a release package.
 	@# bash \
-	echo "Nothing to build."
-	exit 1
+	$(REPO_ROOT)/.venv/bin/python3 -m build
 
 ## Testing
 #####################################################################
 
-# TODO: Add test target dependencies.
 .PHONY: test
-test: lint ## Run all tests.
+test: lint unit-test ## Run all linters and tests.
+
+.PHONY: unit-test
+unit-test: .venv/.installed ## Run unit tests.
+	@# bash \
+	$(REPO_ROOT)/.venv/bin/coverage run -m unittest discover .; \
+	$(REPO_ROOT)/.venv/bin/coverage xml; \
+	$(REPO_ROOT)/.venv/bin/coverage report -m
 
 ## Formatting
 #####################################################################
 
 .PHONY: format
-format: json-format license-headers md-format yaml-format ## Format all files
+format: json-format license-headers md-format py-format yaml-format ## Format all files
 
 .PHONY: json-format
 json-format: node_modules/.installed ## Format JSON files.
@@ -257,7 +264,6 @@ license-headers: ## Update license headers.
 		fi; \
 	done
 
-
 .PHONY: md-format
 md-format: node_modules/.installed ## Format Markdown files.
 	@# bash \
@@ -279,6 +285,20 @@ md-format: node_modules/.installed ## Format Markdown files.
 		--no-error-on-unmatched-pattern \
 		--write \
 		$${files}
+
+.PHONY: py-format
+py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	ruff check --select I --fix $${files}; \
+	ruff format $${files}
 
 .PHONY: yaml-format
 yaml-format: node_modules/.installed ## Format YAML files.
@@ -305,7 +325,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint checkmake commitlint fixme format-check markdownlint renovate-config-validator textlint yamllint zizmor ## Run all linters.
+lint: actionlint checkmake commitlint fixme format-check markdownlint mypy renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -434,11 +454,43 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 	fi; \
 	$(REPO_ROOT)/node_modules/.bin/markdownlint-cli2 $${files}
 
+.PHONY: mypy
+mypy: .venv/.installed ## Runs the mypy type checker.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	${REPO_ROOT}/.venv/bin/mypy \
+		--config-file mypy.ini \
+		$${files}
+
 .PHONY: renovate-config-validator
 renovate-config-validator: node_modules/.installed ## Validate Renovate configuration.
 	@# bash \
 	$(REPO_ROOT)/node_modules/.bin/renovate-config-validator \
 		--strict
+
+.PHONY: ruff
+ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
+	@# bash \
+	files=$$( \
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done \
+	); \
+	if [ "$${files}" == "" ]; then \
+		exit 0; \
+	fi; \
+	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
+		ruff check --output-format=github $${files}; \
+	else \
+		ruff check $${files}; \
+	fi
 
 .PHONY: textlint
 textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textlint linter.
@@ -525,8 +577,14 @@ todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
 
 .PHONY: clean
 clean: ## Delete temporary files.
-	@$(RM) -r .bin
+	@$(RM) -r .bin/
 	@$(RM) -r $(AQUA_ROOT_DIR)
-	@$(RM) -r .venv
-	@$(RM) -r node_modules
+	@$(RM) -r .venv/
+	@$(RM) -r node_modules/
 	@$(RM) *.sarif.json
+	@$(RM) -r dist/
+	@$(RM) -r *.egg-info/
+	@$(RM) -r .coverage
+	@$(RM) -r coverage.xml
+	@python3 -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
+	@python3 -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"
