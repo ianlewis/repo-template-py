@@ -14,7 +14,7 @@ charset = utf-8
 trim_trailing_whitespace = true
 
 # tab-width of 4 is recommended for Markdown files.
-[*.md]
+[{*.md,*.py}]
 indent_style = space
 indent_size = 4
 
