@@ -36,12 +36,11 @@ REPO_NAME := $(shell basename "$(REPO_ROOT)")
 
 # renovate: datasource=github-releases depName=aquaproj/aqua versioning=loose
 AQUA_VERSION ?= v2.58.0
+# renovate: datasource=github-releases depName=aquaproj/aqua-installer versioning=loose
+AQUA_INSTALLER_VERSION ?= v4.0.4
 AQUA_REPO := github.com/aquaproj/aqua
-AQUA_CHECKSUM.linux.amd64 := e4db66fca1cf9061d18ff1c0abc1cb68ada30e1e2500438ec8a20b72661111be
-AQUA_CHECKSUM.linux.arm64 := 2e7fe48e181eb6e310653124562b5b30569f1a29b781da6ee82d902ded25c6dc
-AQUA_CHECKSUM.darwin.arm64 := 2d6a5dbdfac17a9caa256f87104b9ce716dcd6eb8cbe1c248adb63d24101db21
 AQUA_CHECKSUM ?= $(AQUA_CHECKSUM.$(kernel).$(arch))
-AQUA_URL := https://$(AQUA_REPO)/releases/download/$(AQUA_VERSION)/aqua_$(kernel)_$(arch).tar.gz
+AQUA_INSTALLER_URL := https://raw.githubusercontent.com/aquaproj/aqua-installer/$(AQUA_INSTALLER_VERSION)/aqua-installer
 export AQUA_ROOT_DIR = $(REPO_ROOT)/.aqua
 
 # Ensure that aqua and aqua installed tools are in the PATH.
@@ -92,16 +91,8 @@ help: ## Print all Makefile targets (this message).
 				} \
 			}'
 
-$(REPO_ROOT)/.aqua-checksums.json: $(REPO_ROOT)/.aqua.yaml $(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION)/aqua
-	@# bash \
-	loglevel="info"; \
-	if [ -n "$(DEBUG_LOGGING)" ]; then \
-		loglevel="debug"; \
-	fi; \
-	$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION)/aqua \
-		--config "$(REPO_ROOT)/.aqua.yaml" \
-		--log-level "$${loglevel}" \
-		update-checksum
+# Node.js setup
+#####################################################################
 
 package-lock.json: package.json $(AQUA_ROOT_DIR)/.installed
 	@# bash \
@@ -124,6 +115,10 @@ package-lock.json: package.json $(AQUA_ROOT_DIR)/.installed
 		# integrity field. npm install will not restore this field if \
 		# missing in an existing package-lock.json file. \
 		rm -f $@; \
+		# NOTE: We clean the node_modules directory to ensure that npm install \
+		#       will not desync between the package.json, package-lock.json \
+		#       and the node_modules directory. \
+		$(MAKE) clean-node-modules; \
 		npm --loglevel="$${loglevel}" install \
 			--no-audit \
 			--no-fund; \
@@ -134,7 +129,7 @@ package-lock.json: package.json $(AQUA_ROOT_DIR)/.installed
 			--no-fund; \
 	fi
 
-node_modules/.installed: package.json | package-lock.json
+node_modules/.installed: package.json
 	@# bash \
 	loglevel="silent"; \
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
@@ -144,30 +139,63 @@ node_modules/.installed: package.json | package-lock.json
 	npm --loglevel="$${loglevel}" audit signatures; \
 	touch $@
 
-.venv/bin/activate:
-	@# bash \
-	python3 -m venv .venv
+# Python setup
+#####################################################################
 
-.venv/.installed: requirements-dev.txt .venv/bin/activate
+.uv/venv/bin/activate:
 	@# bash \
-	$(REPO_ROOT)/.venv/bin/pip install -r $< --require-hashes; \
+	mkdir -p $(REPO_ROOT)/.uv; \
+	python -m venv $(REPO_ROOT)/.uv/venv; \
 	touch $@
 
-$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION)/aqua:
+.uv/.installed: requirements-dev.txt .uv/venv/bin/activate
 	@# bash \
-	mkdir -p $(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION); \
-	tempfile=$$($(MKTEMP) --suffix=".aqua-$(AQUA_VERSION).tar.gz"); \
-	curl -sSLo "$${tempfile}" "$(AQUA_URL)"; \
-	echo "$(AQUA_CHECKSUM)  $${tempfile}" | shasum -a 256 -c; \
-	tar -x -C $(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION) -f "$${tempfile}"
+	$(REPO_ROOT)/.uv/venv/bin/pip install -r $< --require-hashes; \
+	touch $@
 
-$(AQUA_ROOT_DIR)/.installed: $(REPO_ROOT)/.aqua.yaml $(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION)/aqua | $(REPO_ROOT)/.aqua-checksums.json
+uv.lock: pyproject.toml .uv/.installed
+	@# bash \
+	$(REPO_ROOT)/.uv/venv/bin/uv lock; \
+	touch $@
+
+.venv/.installed: pyproject.toml .uv/.installed
+	@# bash \
+	$(REPO_ROOT)/.uv/venv/bin/uv sync --locked; \
+	touch $@
+
+# Aqua setup
+#####################################################################
+
+# NOTE: aqua-installer itself is treated as a lockfile.
+.PHONY: aqua-installer
+aqua-installer:
+	curl -sSfL -o .aqua-installer $(AQUA_INSTALLER_URL); \
+	# TODO(github.com/aquaproj/aqua-installer/pull/932): Remove after merge \
+	sed -i'' -E 's/rm -R /rm -Rf /' .aqua-installer; \
+	chmod +x .aqua-installer
+
+$(AQUA_ROOT_DIR)/bin/aqua:
+	@# bash \
+	./.aqua-installer -v "$(AQUA_VERSION)"
+
+$(REPO_ROOT)/.aqua-checksums.json: $(REPO_ROOT)/.aqua.yaml $(AQUA_ROOT_DIR)/bin/aqua
 	@# bash \
 	loglevel="info"; \
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
 		loglevel="debug"; \
 	fi; \
-	$(REPO_ROOT)/.bin/aqua-$(AQUA_VERSION)/aqua \
+	$(AQUA_ROOT_DIR)/bin/aqua \
+		--config "$(REPO_ROOT)/.aqua.yaml" \
+		--log-level "$${loglevel}" \
+		update-checksum
+
+$(AQUA_ROOT_DIR)/.installed: $(AQUA_ROOT_DIR)/bin/aqua $(REPO_ROOT)/.aqua.yaml
+	@# bash \
+	loglevel="info"; \
+	if [ -n "$(DEBUG_LOGGING)" ]; then \
+		loglevel="debug"; \
+	fi; \
+	$(AQUA_ROOT_DIR)/bin/aqua \
 		--config "$(REPO_ROOT)/.aqua.yaml" \
 		--log-level "$${loglevel}" \
 		install; \
@@ -177,12 +205,12 @@ $(AQUA_ROOT_DIR)/.installed: $(REPO_ROOT)/.aqua.yaml $(REPO_ROOT)/.bin/aqua-$(AQ
 #####################################################################
 
 .PHONY: all
-all: format test package ## Run all tests and build a release package.
+all: test package ## Run all tests and build a release package.
 
 .PHONY: package
 package: .venv/.installed ## Create a release package.
 	@# bash \
-	$(REPO_ROOT)/.venv/bin/python3 -m build
+	$(REPO_ROOT)/.venv/bin/python -m build
 
 ## Testing
 #####################################################################
@@ -425,7 +453,7 @@ format-check: ## Check that files are properly formatted.
 	$(MAKE) format; \
 	exit_code=0; \
 	if [ -n "$$(git diff)" ]; then \
-		>&2 echo "Some files need to be formatted. Please run 'make format' and try again."; \
+		>&2 echo "Some files need to be formatted. Please run '$(MAKE) format' and try again."; \
 		if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 			echo "::group::git diff"; \
 		fi; \
@@ -559,7 +587,7 @@ zizmor: .venv/.installed ## Runs the zizmor linter.
 #####################################################################
 
 .PHONY: update-lockfiles
-update-lockfiles: $(REPO_ROOT)/.aqua-checksums.json package-lock.json ## Update lockfiles.
+update-lockfiles: $(REPO_ROOT)/.aqua-checksums.json package-lock.json uv.lock aqua-installer ## Update lockfiles.
 
 .PHONY: todos
 todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
@@ -575,16 +603,20 @@ todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
 		--output "$${output}" \
 		--todo-types="TODO,Todo,todo,FIXME,Fixme,fixme,BUG,Bug,bug,XXX,COMBAK"
 
+.PHONY: clean-node-modules
+clean-node-modules:
+	@$(RM) -r node_modules
+
 .PHONY: clean
-clean: ## Delete temporary files.
-	@$(RM) -r .bin/
+clean: clean-node-modules ## Delete temporary files.
+	@$(RM) -r .bin
 	@$(RM) -r $(AQUA_ROOT_DIR)
-	@$(RM) -r .venv/
-	@$(RM) -r node_modules/
+	@$(RM) -r .venv
+	@$(RM) -r .uv
 	@$(RM) *.sarif.json
 	@$(RM) -r dist/
 	@$(RM) -r *.egg-info/
 	@$(RM) -r .coverage
 	@$(RM) -r coverage.xml
-	@python3 -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
-	@python3 -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"
+	@python -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
+	@python -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"

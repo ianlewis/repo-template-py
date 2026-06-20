@@ -24,14 +24,19 @@ repository starter template.
 - **Reproducible**: Because the repository is self-contained and development
   dependencies are tracked, linting and testing produce consistent results
   locally as well as on GitHub Actions.
-- **Tuned for OSS**: Includes sane defaults for [project
-  documentation](#project-documentation) geared towards Open-Source projects.
+- **Tuned for OSS**: Includes sane defaults for project documentation geared
+  towards Open-Source projects and adhering to
+  [GitHub recommended community standards](https://opensource.guide/).
 - **Tuned for GitHub**: Works well with GitHub checks and settings. Includes
   GitHub workflows for formatting and linting of base configuration files.
+- **Ideal for AI agents**: Because the repository is self-contained, it is ideal
+  for use with AI agents running in sandboxed environments. Tests and linters
+  can be run easily by agents to check their work and get feedback on changes
+  they have made.
 
 ## Goals
 
-### Repository quality
+### Repository Quality
 
 A set of [formatters and linters](#formatting-and-linting) are maintained to
 maintain repository code and configuration quality through pull request status
@@ -60,8 +65,8 @@ External dependencies on GitHub actions are limited to trusted actions with
 good security practices (e.g. official GitHub-owned actions) to minimize
 exposure to compromise via external repositories.
 
-Versioning of formatting, linting, and other tool dependencies is done via the
-`requirements.txt` and `packages.json` where possible. This is so that the
+Versioning of formatting, linting, and other tool dependencies is done via
+lockfiles (e.g. `uv.lock`, `package-lock.json`). This is so that the
 versions can be maintained and updated via dependency automation tooling. This
 repository uses [Mend Renovate](https://www.mend.io/renovate/) because it
 allows more flexibility in configuration than Dependabot.
@@ -123,9 +128,9 @@ do not need to be pre-installed:
 - [`commitlint`]: For checking commit messages (installed by local
   `node_modules`).
 - [`jq`]: For parsing output of some linters (installed by Aqua in `.aqua`).
-- [`markdownlint`]: For linting markdown (installed in local `node_modules`).
+- [`markdownlint`]: For linting Markdown (installed in local `node_modules`).
 - [`mbrukman/autogen`]: For adding license headers (vendored in `third_party`).
-- [`prettier`]: For formatting markdown and YAML files (installed in local
+- [`prettier`]: For formatting Markdown and YAML files (installed in local
   `node_modules`).
 - [`ruff`]: For formatting and linting Python code (installed by Aqua in
   `.aqua`).
@@ -144,7 +149,7 @@ do not need to be pre-installed:
 The repository is organized to be as self-contained as possible. Commands are
 implemented in the project [`Makefile`](#makefile).
 
-### Makefile
+### `Makefile`
 
 The `Makefile` is used for running commands, managing files, and maintaining
 code quality. It includes a default `help` target that prints all make targets
@@ -189,7 +194,7 @@ Maintenance
   clean                     Delete temporary files.
 ```
 
-### Formatting and linting
+### Formatting and Linting
 
 Some `Makefile` targets for basic formatters and linters are included along
 with GitHub Actions pre-submits. Where possible, pre-submits use `Makefile`
@@ -210,7 +215,7 @@ commands](https://docs.github.com/en/actions/writing-workflows/choosing-what-you
 so they can be easily interpreted when run in Pull-Request [status
 checks](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks).
 
-### License headers
+### License Headers
 
 The `license-headers` make target will add license headers to files that are
 missing it with the Copyright holder set to the current value of `git config
@@ -218,12 +223,17 @@ user.name`.
 
 Files are checked for the existence license headers in status checks.
 
-### Updating dependencies
+### Updating Dependencies
 
 You can update dependencies by updating the appropriate dependency file
 (`package.json`, `.aqua.yaml`, etc.) and running `make update-lockfiles`. This
 will update the lockfiles with the appropriate versions and checksums so that
 they can be installed consistently.
+
+[Mend Renovate](https://www.mend.io/renovate/) can be used to automatically
+update dependencies and lockfiles. The [autofix.ci](https://autofix.ci/) GitHub
+App can also be used to automatically update lockfiles on pull requests created
+by Renovate.
 
 ### Testing
 
@@ -234,20 +244,52 @@ tests, and end-to-end tests.
 Running `make unit-test` will run unit tests only. This target will generate coverage
 using `coverage.py` and output the results to `.coverage`.
 
-## Project documentation
+### Conventional Commits
 
-This repository template includes stub documentation. Examples of
-`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md` can be found in the
-[`ianlewis/ianlewis`](https://github.com/ianlewis/ianlewis) repository and are
-maintained in line with [GitHub recommended community
-standards](https://opensource.guide/).
+This repository template uses [Conventional
+Commits](https://www.conventionalcommits.org/en/v1.0.0/) to standardize commit
+message formatting. Conventional commits can help to communicate the nature of
+changes at a glance, and give hints on backwards compatibility.
 
-## Repository creation checklist
+While you _may_ use conventional commits to automate releases, it is **not**
+recommended to use commit messages to automatically determine the next
+release version, or to auto-generate user-facing documentation such as the
+`CHANGELOG.md` or release notes. These should be written for an end-user
+audience, be human readable, and include additional relevant information and
+context.
+
+This repository deviates slightly from the conventional commits specification by
+requiring that all commits include a scope. Scope is project specific and could
+refer to a component, module, or section of the codebase.
+
+This post explains some of the rationale:
+
+- [Stop Using Conventional Commits](https://sumnerevans.com/posts/software-engineering/stop-using-conventional-commits/) - _Sumner Evans_
+
+### Keeping Downstream Repositories in Sync
+
+You can optionally keep repositories created with the template in sync with
+changes to the template. Because repositories created from GitHub templates are
+not forks, it is recommended to perform a squash merge so the template sync
+lands as a single commit on your commit history.
+
+```shell
+# One time step: Add the repository template as a remote.
+git remote add repo-template git@github.com:ianlewis/repo-template.git
+
+# Fetch the latest version of the repo-template.
+git fetch repo-template main
+
+# Create a new squash merge commit.
+git merge --no-edit --signoff --squash --allow-unrelated-histories repo-template/main
+```
+
+## Repository Creation Checklist
 
 When creating a new repository from this template, the following checklist
 is recommended to ensure the repository is set up correctly.
 
-### Update configuration files
+### Update Configuration Files
 
 Files that should be updated include a TODO comment to indicate what changes
 should made. You can run `make todos` to list all TODOs in the repository.
@@ -262,7 +304,7 @@ README.md:3:<!-- TODO: update badge urls -->
 README.md:7:<!-- TODO: Update README contents. -->
 ```
 
-### Recommended repository settings
+### Recommended Repository Settings
 
 The following repository settings are recommended in conjunction with this
 repository template.
@@ -273,16 +315,27 @@ repository template.
        to preserve the original commit history of a pull request. This makes it
        easier to retain the original commit messages and signatures of
        contributors. Disallowing squash merges and rebase merges is recommended.
+2. [ ] **Require contributors to sign off on web-based commits**: This is
+       recommended to ensure that all commits made through the GitHub web
+       interface are signed off by the author with a Developer Certificate of
+       Origin (DCO).
 
 #### GitHub Apps
 
 1. [ ] **Enable [DCO](https://github.com/apps/dco):** Enable the DCO GitHub App
-       to ensure that all commits are signed off by the author. This is a
-       lightweight alternative to a [Contributor License
-       Agreement](https://en.wikipedia.org/wiki/Contributor_License_Agreement)
+       to ensure that all commits are signed off by the author with a DCO. This
+       is a lightweight alternative to a
+       [Contributor License Agreement](https://en.wikipedia.org/wiki/Contributor_License_Agreement)
        (CLA) for contributors to certify that they wrote or otherwise have the
        right to submit the code they are contributing to the project. If you
        have a CLA you can omit this step.
+2. [ ] **Enable [Mend Renovate](https://www.mend.io/renovate/):** Enable
+       Renovate to automatically update dependencies and lockfiles. This is
+       recommended to ensure that dependencies are kept up to date and security
+       vulnerabilities are addressed in a timely manner.
+3. [ ] **Enable [autofix.ci](https://autofix.ci/):** Enable autofix.ci to
+       automatically update lockfiles in pull requests. This is recommended to
+       avoid having to manually update lockfiles on Renovate PRs.
 
 #### Rules / Rulesets
 
@@ -291,7 +344,7 @@ rules that follow the [recommendations from OpenSSF
 Scorecard](https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection)
 to achieve the highest Tier and score as possible.
 
-##### Branch rules
+##### Branch Rules
 
 - [ ] **Require a pull request before merging:** This is recommended to ensure
       that all changes to the default branch are reviewed and the code
@@ -319,12 +372,12 @@ to achieve the highest Tier and score as possible.
     - [ ] `yamllint / yamllint`
     - [ ] `zizmor / zizmor`
 
-##### Block force pushes
+##### Block Force Pushes
 
 - [ ] **Block force pushes:** This is recommended to ensure that all changes to
       the default branch are made via pull requests.
 
-##### Require code scanning results
+##### Require Code Scanning Results
 
 The following tools should be added to the required code scanning results.
 
@@ -346,7 +399,7 @@ The following tools should be added to the required code scanning results.
        alerts](https://docs.renovatebot.com/configuration-options/#vulnerabilityalerts)
        feature.
 
-##### Code scanning
+##### Code Scanning
 
 1. [ ] **CodeQL analysis:**
        Make sure "GitHub Actions (Public Preview)" is enabled in languages.
@@ -365,36 +418,14 @@ Add the repository to [Codecov](https://codecov.io/) for code coverage. View the
 
 - [ ] **`CODECOV_TOKEN`:** add the repository upload token as a repository secret.
 
-## Conventional commits
+#### Copilot / Cloud Agent
 
-This repository template uses [Conventional
-Commits](https://www.conventionalcommits.org/en/v1.0.0/) to standardize commit
-message formatting. Conventional commits can help to communicate the nature of
-changes at a glance, and give hints on backwards compatibility.
+If you use GitHub Copilot in your repository, it is recommended to enable the
+following settings:
 
-While you _may_ use conventional commits to automatically determine the next
-release version, it is **not** recommended to use conventional commits to auto
-generate user-facing documentation such as the `CHANGELOG.md` or release notes.
-These should be written for an end-user audience, be human readable, and include
-additional relevant information and context.
-
-## Keeping repositories in sync
-
-You can optionally keep repositories created with the template in sync with
-changes to the template. Because repositories created from GitHub templates are
-not forks, it is recommended to perform a squash merge to squash the merge as a
-commit on your commit history.
-
-```shell
-# One time step: Add the repository template as a remote.
-git remote add repo-template-py git@github.com:ianlewis/repo-template-py.git
-
-# Fetch the latest version of the repo-template.
-git fetch repo-template-py main
-
-# Create a new squash merge commit.
-git merge --no-edit --signoff --squash --allow-unrelated-histories repo-template-py/main
-```
+1. [ ] **Custom Allowlist**: Add the following domains to the Copilot custom
+       allowlist to allow Copilot to access them in agent sessions.
+    - [ ] `sigstore.dev`
 
 ## Contributing
 
