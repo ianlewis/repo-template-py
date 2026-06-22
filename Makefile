@@ -144,23 +144,23 @@ node_modules/.installed: package.json
 
 .uv/venv/bin/activate:
 	@# bash \
-	mkdir -p $(REPO_ROOT)/.uv; \
-	python -m venv $(REPO_ROOT)/.uv/venv; \
+	mkdir -p .uv; \
+	python -m venv .uv/venv; \
 	touch $@
 
 .uv/.installed: requirements-dev.txt .uv/venv/bin/activate
 	@# bash \
-	$(REPO_ROOT)/.uv/venv/bin/pip install -r $< --require-hashes; \
+	./.uv/venv/bin/pip install -r $< --require-hashes; \
 	touch $@
 
 uv.lock: pyproject.toml .uv/.installed
 	@# bash \
-	$(REPO_ROOT)/.uv/venv/bin/uv lock; \
+	./.uv/venv/bin/uv lock; \
 	touch $@
 
 .venv/.installed: pyproject.toml .uv/.installed
 	@# bash \
-	$(REPO_ROOT)/.uv/venv/bin/uv sync --locked; \
+	./.uv/venv/bin/uv sync --locked; \
 	touch $@
 
 # Aqua setup
@@ -178,25 +178,25 @@ $(AQUA_ROOT_DIR)/bin/aqua:
 	@# bash \
 	./.aqua-installer -v "$(AQUA_VERSION)"
 
-$(REPO_ROOT)/.aqua-checksums.json: $(REPO_ROOT)/.aqua.yaml $(AQUA_ROOT_DIR)/bin/aqua
+.aqua-checksums.json: .aqua.yaml $(AQUA_ROOT_DIR)/bin/aqua
 	@# bash \
 	loglevel="info"; \
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
 		loglevel="debug"; \
 	fi; \
 	$(AQUA_ROOT_DIR)/bin/aqua \
-		--config "$(REPO_ROOT)/.aqua.yaml" \
+		--config ".aqua.yaml" \
 		--log-level "$${loglevel}" \
 		update-checksum
 
-$(AQUA_ROOT_DIR)/.installed: $(AQUA_ROOT_DIR)/bin/aqua $(REPO_ROOT)/.aqua.yaml
+$(AQUA_ROOT_DIR)/.installed: $(AQUA_ROOT_DIR)/bin/aqua .aqua.yaml
 	@# bash \
 	loglevel="info"; \
 	if [ -n "$(DEBUG_LOGGING)" ]; then \
 		loglevel="debug"; \
 	fi; \
 	$(AQUA_ROOT_DIR)/bin/aqua \
-		--config "$(REPO_ROOT)/.aqua.yaml" \
+		--config ".aqua.yaml" \
 		--log-level "$${loglevel}" \
 		install; \
 	touch $@
@@ -247,7 +247,7 @@ json-format: node_modules/.installed ## Format JSON files.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	$(REPO_ROOT)/node_modules/.bin/prettier \
+	./node_modules/.bin/prettier \
 		--log-level "$${loglevel}" \
 		--no-error-on-unmatched-pattern \
 		--write \
@@ -282,7 +282,7 @@ license-headers: ## Update license headers.
 	fi; \
 	for filename in $${files}; do \
 		if ! ( head "$${filename}" | $(GREP) -iL "Copyright" > /dev/null ); then \
-			$(REPO_ROOT)/third_party/mbrukman/autogen/autogen.sh \
+			./third_party/mbrukman/autogen/autogen.sh \
 				--in-place \
 				--no-code \
 				--no-tlc \
@@ -308,7 +308,7 @@ md-format: node_modules/.installed ## Format Markdown files.
 		exit 0; \
 	fi; \
 	# NOTE: prettier uses .editorconfig for tab-width. \
-	$(REPO_ROOT)/node_modules/.bin/prettier \
+	./node_modules/.bin/prettier \
 		--log-level "$${loglevel}" \
 		--no-error-on-unmatched-pattern \
 		--write \
@@ -343,7 +343,7 @@ yaml-format: node_modules/.installed ## Format YAML files.
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	$(REPO_ROOT)/node_modules/.bin/prettier \
+	./node_modules/.bin/prettier \
 		--log-level "$${loglevel}" \
 		--no-error-on-unmatched-pattern \
 		--write \
@@ -423,7 +423,7 @@ commitlint: node_modules/.installed ## Run commitlint linter.
 		fi; \
 		commitlint_to="HEAD"; \
 	fi; \
-	$(REPO_ROOT)/node_modules/.bin/commitlint \
+	./node_modules/.bin/commitlint \
 		--from "$${commitlint_from}" \
 		--to "$${commitlint_to}" \
 		--verbose \
@@ -480,7 +480,7 @@ markdownlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the ma
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	$(REPO_ROOT)/node_modules/.bin/markdownlint-cli2 $${files}
+	./node_modules/.bin/markdownlint-cli2 $${files}
 
 .PHONY: mypy
 mypy: .venv/.installed ## Runs the mypy type checker.
@@ -500,7 +500,7 @@ mypy: .venv/.installed ## Runs the mypy type checker.
 .PHONY: renovate-config-validator
 renovate-config-validator: node_modules/.installed ## Validate Renovate configuration.
 	@# bash \
-	$(REPO_ROOT)/node_modules/.bin/renovate-config-validator \
+	./node_modules/.bin/renovate-config-validator \
 		--strict
 
 .PHONY: ruff
@@ -533,7 +533,7 @@ textlint: node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textli
 	if [ "$${files}" == "" ]; then \
 		exit 0; \
 	fi; \
-	$(REPO_ROOT)/node_modules/.bin/textlint $${files}
+	./node_modules/.bin/textlint $${files}
 
 .PHONY: yamllint
 yamllint: .venv/.installed ## Runs the yamllint linter.
@@ -551,7 +551,7 @@ yamllint: .venv/.installed ## Runs the yamllint linter.
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
 		format="github"; \
 	fi; \
-	$(REPO_ROOT)/.venv/bin/yamllint \
+	./.venv/bin/yamllint \
 		--strict \
 		--format "$${format}" \
 		$${files}
@@ -571,13 +571,13 @@ zizmor: .venv/.installed ## Runs the zizmor linter.
 		exit 0; \
 	fi; \
 	if [ "$(OUTPUT_FORMAT)" == "github" ]; then \
-		$(REPO_ROOT)/.venv/bin/zizmor \
+		./.venv/bin/zizmor \
 			--quiet \
 			--pedantic \
 			--format sarif \
 			$${files} > zizmor.sarif.json; \
 	fi; \
-	$(REPO_ROOT)/.venv/bin/zizmor \
+	./.venv/bin/zizmor \
 		--quiet \
 		--pedantic \
 		--format plain \
@@ -587,7 +587,7 @@ zizmor: .venv/.installed ## Runs the zizmor linter.
 #####################################################################
 
 .PHONY: update-lockfiles
-update-lockfiles: $(REPO_ROOT)/.aqua-checksums.json package-lock.json uv.lock aqua-installer ## Update lockfiles.
+update-lockfiles: .aqua-checksums.json package-lock.json uv.lock aqua-installer ## Update lockfiles.
 
 .PHONY: todos
 todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
