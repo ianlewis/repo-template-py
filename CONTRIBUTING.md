@@ -209,7 +209,6 @@ number MAJOR.MINOR.PATCH, increment the:
 ### Conventional Commits
 
 PR titles and commit messages should be in [Conventional Commits] format.
-Usually this is required by not always.
 
 The following prefixes are supported and are checked using the
 [`@commitlint/config-conventional`](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional)
@@ -227,6 +226,16 @@ The following prefixes are supported and are checked using the
 9. `perf`: change to improve performance
 10. `revert`: reverts a previous change
 11. `test`: adds missing tests or corrects existing tests
+
+The rules for this repository depart from the default Conventional Commits rules
+in that the scope is not optional. It should always be included in the commit
+message.
+
+There are a few exceptions to these rules:
+
+- Default git commit messages are allowed (e.g. "Merge ...", "Revert ...").
+- Initial commits made by GitHub Copilot are allowed. These have the commit
+  message "Initial plan" and contain no changes.
 
 [`good first issue`]: ../../labels/good%20first%20issue
 [`help wanted`]: ../../labels/help%20wanted

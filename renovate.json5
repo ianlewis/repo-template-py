@@ -70,36 +70,42 @@
   // Group various ecosystem updates. Security updates are always separate.
   packageRules: [
     {
-      matchUpdateTypes: ["minor", "patch"],
       groupName: "aqua",
+      matchUpdateTypes: ["minor", "patch"],
       matchFileNames: [".aqua.yaml", ".aqua-checksums.yaml"],
     },
     {
-      matchUpdateTypes: ["minor", "patch"],
       groupName: "makefile",
+      matchUpdateTypes: ["minor", "patch"],
       matchFileNames: ["Makefile"],
     },
     {
+      groupName: "github-actions",
       matchManagers: ["github-actions"],
       matchUpdateTypes: ["minor", "patch"],
-      groupName: "github-actions",
       pinDigests: true,
     },
     {
-      matchManagers: ["pip_requirements"],
+      groupName: "pep621",
+      matchManagers: ["pep621"],
       matchUpdateTypes: ["minor", "patch"],
-      groupName: "python",
     },
     {
+      groupName: "python",
+      matchManagers: ["pip_requirements"],
+      matchUpdateTypes: ["minor", "patch"],
+    },
+    {
+      groupName: "npm",
       matchManagers: ["npm"],
       matchDepTypes: ["dependencies"],
       matchUpdateTypes: ["minor", "patch"],
-      groupName: "npm",
     },
     {
+      groupName: "npm dev",
       matchManagers: ["npm"],
       matchDepTypes: ["devDependencies"],
-      groupName: "npm dev",
+      matchUpdateTypes: ["minor", "patch"],
     },
   ],
 }
