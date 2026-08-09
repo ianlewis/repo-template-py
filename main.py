@@ -1,4 +1,6 @@
-# Copyright 2024 Ian Lewis
+#!/usr/bin/env python3
+#
+# Copyright 2025 Ian Lewis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,29 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: fixme
+"""A sample Python application."""
 
-on:
-  workflow_call:
+import sys
+import typing
 
-permissions:
-  contents: read
 
-concurrency:
-  group: fixme-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+def main(out: typing.TextIO) -> None:
+    """Execute the application."""
+    out.write("Hello, World!")
 
-jobs:
-  fixme:
-    name: fixme
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          submodules: true
-          persist-credentials: false
 
-      - name: fixme
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: make fixme
+if __name__ == "__main__":
+    main(sys.stdout)

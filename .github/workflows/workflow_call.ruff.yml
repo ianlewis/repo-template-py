@@ -1,4 +1,4 @@
-# Copyright 2024 Ian Lewis
+# Copyright 2025 Ian Lewis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: textlint
+name: ruff
 
 on:
   workflow_call:
@@ -21,27 +21,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: textlint-${{ github.event.pull_request.number || github.ref }}
+  group: ruff-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  textlint:
-    name: textlint
+  ruff:
+    name: ruff
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          submodules: true
           persist-credentials: false
+          submodules: true
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: ".node-version"
-
-      - name: enable textlint problem matcher
-        run: echo "::add-matcher::.github/problem_matchers/textlint.json"
-
-      - name: textlint
+      - name: ruff
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: make textlint
+        run: make ruff

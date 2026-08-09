@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: textlint
+name: mypy
 
 on:
   workflow_call:
@@ -21,12 +21,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: textlint-${{ github.event.pull_request.number || github.ref }}
+  group: mypy-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  textlint:
-    name: textlint
+  mypy:
+    name: mypy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -34,14 +34,8 @@ jobs:
           submodules: true
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
-          node-version-file: ".node-version"
+          python-version-file: ".python-version"
 
-      - name: enable textlint problem matcher
-        run: echo "::add-matcher::.github/problem_matchers/textlint.json"
-
-      - name: textlint
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: make textlint
+      - run: make mypy
