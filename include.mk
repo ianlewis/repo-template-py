@@ -162,8 +162,8 @@ $(REPO_ROOT)/package-lock.json: $(REPO_ROOT)/package.json $(AQUA_ROOT_DIR)/.inst
 	nointegrity=""
 	noresolved=""
 	if [ -f "$@" ]; then
-		nointegrity=$$(jq '.packages | del(."") | .[] | select(has("integrity") | not)' < $@)
-		noresolved=$$(jq '.packages | del(."") | .[] | select(has("resolved") | not)' < $@)
+		nointegrity=$$(jq '.packages | del(."") | .[] | select(.inBundle | not) | select(has("integrity") | not)' < $@)
+		noresolved=$$(jq '.packages | del(."") | .[] | select(.inBundle | not) | select(has("resolved") | not)' < $@)
 	fi
 	if [ ! -f "$@" ] || [ -n "$${nointegrity}" ] || [ -n "$${noresolved}" ]; then
 		# NOTE: package-lock.json is removed to ensure that npm includes the
