@@ -1,4 +1,4 @@
-# Copyright 2024 Ian Lewis
+# Copyright 2025 Ian Lewis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,29 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: fixme
+"""Unit tests for main."""
 
-on:
-  workflow_call:
+import io
+import unittest
 
-permissions:
-  contents: read
+from main import main
 
-concurrency:
-  group: fixme-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
-jobs:
-  fixme:
-    name: fixme
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          submodules: recursive
+class TestMain(unittest.TestCase):
+    """Unit tests for main.main."""
 
-      - name: fixme
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: make fixme
+    def test_main(self) -> None:
+        """Test main function output."""
+        out = io.StringIO()
+        main(out)
+        self.assertEqual(out.getvalue(), "Hello, World!")
