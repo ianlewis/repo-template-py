@@ -42,7 +42,7 @@ unit-test: $(REPO_ROOT)/.venv/.installed ## Run unit tests.
 #####################################################################
 
 .PHONY: format
-format: json-format license-headers md-format py-format yaml-format ## Format all files
+format: json-format md-format py-format yaml-format ## Format all files
 
 .PHONY: json-format
 json-format: $(REPO_ROOT)/node_modules/.installed ## Format JSON files.
@@ -65,45 +65,6 @@ json-format: $(REPO_ROOT)/node_modules/.installed ## Format JSON files.
 		--no-error-on-unmatched-pattern \
 		--write \
 		$${files}
-
-.PHONY: license-headers
-license-headers: ## Update license headers.
-	@echo "Updating license headers..."
-	files=$$(
-		git ls-files --deduplicate \
-			'*.c' \
-			'*.cpp' \
-			'*.go' \
-			'*.h' \
-			'*.hpp' \
-			'*.js' \
-			'*.lua' \
-			'*.py' \
-			'*.rb' \
-			'*.rs' \
-			'*.yaml' \
-			'*.yml' \
-			'Makefile' \
-			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done
-	)
-	name=$$(git config user.name)
-	if [ "$${name}" == "" ]; then
-		>&2 echo "git user.name is required."
-		>&2 echo "Set it up using:"
-		>&2 echo "git config user.name \"John Doe\""
-		exit 1
-	fi
-	for filename in $${files}; do
-		if ! ( head "$${filename}" | $(GREP) -iL "Copyright" > /dev/null ); then
-			./third_party/mbrukman/autogen/autogen.sh \
-				--in-place \
-				--no-code \
-				--no-tlc \
-				--copyright "$${name}" \
-				--license apache \
-				"$${filename}"
-		fi
-	done
 
 .PHONY: md-format
 md-format: $(REPO_ROOT)/node_modules/.installed ## Format Markdown files.
@@ -259,6 +220,7 @@ format-check: ## Check that files are properly formatted.
 		exit 1
 	fi
 	$(MAKE) format
+	$(MAKE) license-headers
 	exit_code=0
 	if [ -n "$$(git diff)" ]; then
 		>&2 echo "Some files need to be formatted. Please run '$(MAKE) format' and try again."
@@ -398,6 +360,45 @@ zizmor: $(REPO_ROOT)/.venv/.installed ## Runs the zizmor linter.
 
 .PHONY: update-lockfiles
 update-lockfiles: $(REPO_ROOT)/.aqua-checksums.json $(REPO_ROOT)/package-lock.json $(REPO_ROOT)/uv.lock ## Update lockfiles.
+
+.PHONY: license-headers
+license-headers: ## Update license headers.
+	@echo "Updating license headers..."
+	files=$$(
+		git ls-files --deduplicate \
+			'*.c' \
+			'*.cpp' \
+			'*.go' \
+			'*.h' \
+			'*.hpp' \
+			'*.js' \
+			'*.lua' \
+			'*.py' \
+			'*.rb' \
+			'*.rs' \
+			'*.yaml' \
+			'*.yml' \
+			'Makefile' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done
+	)
+	name=$$(git config user.name || true)
+	if [ "$${name}" == "" ]; then
+		>&2 echo "git user.name is required."
+		>&2 echo "Set it up using:"
+		>&2 echo "git config user.name \"John Doe\""
+		exit 1
+	fi
+	for filename in $${files}; do
+		if ! ( head "$${filename}" | $(GREP) -iL "Copyright" > /dev/null ); then
+			./third_party/mbrukman/autogen/autogen.sh \
+				--in-place \
+				--no-code \
+				--no-tlc \
+				--copyright "$${name}" \
+				--license apache \
+				"$${filename}"
+		fi
+	done
 
 .PHONY: todos
 todos: $(AQUA_ROOT_DIR)/.installed ## Print outstanding TODOs.
