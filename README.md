@@ -319,6 +319,9 @@ repository template.
        recommended to ensure that all commits made through the GitHub web
        interface are signed off by the author with a Developer Certificate of
        Origin (DCO).
+3. [ ] **Allow auto-merge:** Enabling auto-merge is recommended to allow
+       renovate PRs to be automatically merged when all required status checks
+       have passed. This helps reduce toil for minor updates.
 
 #### Rules / Rulesets
 

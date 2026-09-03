@@ -35,7 +35,7 @@ Homepage = "https://github.com/ianlewis/repo-template-py"
 Issues = "https://github.com/ianlewis/repo-template-py/issues"
 
 [build-system]
-requires = ["setuptools ==83.0.0"]
+requires = ["setuptools ==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
@@ -44,7 +44,7 @@ dev = [
     "coverage==7.10.7",
     "mypy==2.3.0",
     "yamllint==1.38.0",
-    "zizmor==1.26.1",
+    "zizmor==1.29.0",
 ]
 
 [tool.setuptools.packages.find]
