@@ -1,15 +1,18 @@
-# `repo-template`
+# `repo-template-py`
 
 <!-- TODO: update badge urls -->
 
-[![tests](https://github.com/ianlewis/repo-template/actions/workflows/pull_request.autofix.yml/badge.svg)](https://github.com/ianlewis/repo-template/actions/workflows/pull_request.autofix.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ianlewis/repo-template/badge)](https://securityscorecards.dev/viewer/?uri=github.com%2Fianlewis%2Frepo-template)
+[![tests](https://github.com/ianlewis/repo-template-py/actions/workflows/pull_request.autofix.yml/badge.svg)](https://github.com/ianlewis/repo-template-py/actions/workflows/pull_request.autofix.yml)
+[![Codecov](https://codecov.io/gh/ianlewis/repo-template-py/graph/badge.svg?token=SV6L15VB0A)](https://codecov.io/gh/ianlewis/repo-template-py)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ianlewis/repo-template-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com%2Fianlewis%2Frepo-template-py)
 
 <!-- TODO: Update README contents. -->
 
+Repository template for Python projects under `github.com/ianlewis`.
+
 This repository template is maintained for use in repositories under
-`github.com/ianlewis`. However, it can be used as a general purpose repository
-starter template.
+`github.com/ianlewis`. However, it can be used as a general purpose Python
+repository starter template.
 
 ## Features
 
@@ -129,6 +132,8 @@ do not need to be pre-installed:
 - [`mbrukman/autogen`]: For adding license headers (vendored in `third_party`).
 - [`prettier`]: For formatting Markdown and YAML files (installed in local
   `node_modules`).
+- [`ruff`]: For formatting and linting Python code (installed by Aqua in
+  `.aqua`).
 - [`shellcheck`]: For linting shell code in GitHub Actions workflows (installed
   by Aqua in `.aqua`).
 - [`textlint`]: For spelling checks (installed in local `node_modules`).
@@ -152,19 +157,22 @@ and their descriptions grouped by function.
 
 ```shell
 $ make
-repo-template Makefile
+repo-template-py Makefile
 Usage: make [COMMAND]
 
   help                      Print all Makefile targets (this message).
 Build
-  all                       Build everything.
+  all                       Run all tests and build a release package.
+  package                   Create a release package.
 Testing
-  test                      Run all tests.
+  test                      Run all linters and tests.
+  unit-test                 Run unit tests.
 Formatting
   format                    Format all files
   json-format               Format JSON files.
   license-headers           Update license headers.
   md-format                 Format Markdown files.
+  py-format                 Format Python files.
   yaml-format               Format YAML files.
 Linting
   lint                      Run all linters.
@@ -174,7 +182,9 @@ Linting
   fixme                     Check for outstanding FIXMEs.
   format-check              Check that files are properly formatted.
   markdownlint              Runs the markdownlint linter.
+  mypy                      Runs the mypy type checker.
   renovate-config-validator Validate Renovate configuration.
+  ruff                      Runs the ruff linter.
   textlint                  Runs the textlint linter.
   yamllint                  Runs the yamllint linter.
   zizmor                    Runs the zizmor linter.
@@ -225,6 +235,15 @@ update dependencies and lockfiles. The [autofix.ci](https://autofix.ci/) GitHub
 App can also be used to automatically update lockfiles on pull requests created
 by Renovate.
 
+### Testing
+
+Running `make test` will run all tests including linters. This target is meant to run
+all tests necessary to validate code for deployment including unit tests, integration
+tests, and end-to-end tests.
+
+Running `make unit-test` will run unit tests only. This target will generate coverage
+using `coverage.py` and output the results to `.coverage`.
+
 ### Conventional Commits
 
 This repository template uses [Conventional
@@ -256,13 +275,13 @@ lands as a single commit on your commit history.
 
 ```shell
 # One time step: Add the repository template as a remote.
-git remote add repo-template git@github.com:ianlewis/repo-template.git
+git remote add repo-template-py git@github.com:ianlewis/repo-template-py.git
 
-# Fetch the latest version of the repo-template.
-git fetch repo-template main
+# Fetch the latest version of the repo-template-py.
+git fetch repo-template-py main
 
 # Create a new squash merge commit.
-git merge --no-edit --signoff --squash --allow-unrelated-histories repo-template/main
+git merge --no-edit --signoff --squash --allow-unrelated-histories repo-template-py/main
 ```
 
 ## Repository Creation Checklist
@@ -329,10 +348,13 @@ to achieve the highest Tier and score as possible.
     - [ ] `checkmake / checkmake`
     - [ ] `commitlint / commitlint`
     - [ ] `format-check / format-check`
-    - [ ] `markdownlint / markdownlint`
-    - [ ] `renovate-config-validator / renovate-config-validator`
-    - [ ] `textlint / textlint`
     - [ ] `fixme / fixme`
+    - [ ] `markdownlint / markdownlint`
+    - [ ] `mypy / mypy`
+    - [ ] `renovate-config-validator / renovate-config-validator`
+    - [ ] `ruff / ruff`
+    - [ ] `textlint / textlint`
+    - [ ] `unit-test / unit-test`
     - [ ] `yamllint / yamllint`
     - [ ] `zizmor / zizmor`
 
@@ -407,16 +429,6 @@ following settings:
        automatically update lockfiles in pull requests. This is recommended to
        avoid having to manually update lockfiles on Renovate PRs.
 
-## Language-Specific Templates
-
-A number of language specific templates based on this template are also available:
-
-| Language              | Repository                                                                  |
-| --------------------- | --------------------------------------------------------------------------- |
-| Go                    | [`ianlewis/repo-template-go`](https://github.com/ianlewis/repo-template-go) |
-| Python                | [`ianlewis/repo-template-py`](https://github.com/ianlewis/repo-template-py) |
-| TypeScript/JavaScript | [`ianlewis/repo-template-ts`](https://github.com/ianlewis/repo-template-ts) |
-
 ## Contributing
 
 PRs may be accepted to this template. This template uses the same
@@ -438,6 +450,7 @@ created from the template.
 [`jq`]: https://jqlang.org/
 [`markdownlint`]: https://github.com/DavidAnson/markdownlint
 [`prettier`]: https://prettier.io/
+[`ruff`]: https://docs.astral.sh/ruff/
 [`shellcheck`]: https://www.shellcheck.net/
 [`textlint`]: https://textlint.github.io/
 [`todos`]: https://github.com/ianlewis/todos
