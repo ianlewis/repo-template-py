@@ -320,7 +320,7 @@ repository template.
        interface are signed off by the author with a Developer Certificate of
        Origin (DCO).
 3. [ ] **Allow auto-merge:** Enabling auto-merge is recommended to allow
-       renovate PRs to be automatically merged when all required status checks
+       Renovate PRs to be automatically merged when all required status checks
        have passed. This helps reduce toil for minor updates.
 
 #### Rules / Rulesets
