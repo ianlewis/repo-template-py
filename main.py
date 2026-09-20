@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+#
 # Copyright 2025 Ian Lewis
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rules:
-  forbidden-uses:
-    config:
-      allow:
-        # Allow the use of official GitHub Actions
-        - actions/*
-        # Allow the use of official GitHub CodeQL Actions
-        - github/codeql-action/*
+"""A sample Python application."""
 
-        # Allow the use of the autofix-ci action
-        - autofix-ci/action
+import sys
+import typing
 
-        # Allow the use of the todo-issue-reopener action
-        - ianlewis/todo-issue-reopener
 
-        # Allow the use of the ossf/scorecard-action
-        - ossf/scorecard-action
+def main(out: typing.TextIO) -> None:
+    """Execute the application."""
+    out.write("Hello, World!")
 
-        # Allow the use of the official Codecov Action
-        - codecov/codecov-action
+
+if __name__ == "__main__":
+    main(sys.stdout)
