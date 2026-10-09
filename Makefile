@@ -17,24 +17,32 @@ include include.mk
 ## Build
 #####################################################################
 
-# TODO: Add all target dependencies.
 .PHONY: all
-all: test ## Build everything.
-	@echo "Nothing to build."
-	exit 1
+all: test package ## Run all tests and build a release package.
+
+.PHONY: package
+package: .venv/.installed ## Create a release package.
+	@# bash \
+	$(REPO_ROOT)/.venv/bin/python -m build
 
 ## Testing
 #####################################################################
 
-# TODO: Add test target dependencies.
 .PHONY: test
-test: lint ## Run all tests.
+test: lint unit-test ## Run all linters and tests.
+
+.PHONY: unit-test
+unit-test: $(REPO_ROOT)/.venv/.installed ## Run unit tests.
+	@echo "Running unit tests..."
+	$(REPO_ROOT)/.venv/bin/coverage run -m unittest discover .
+	$(REPO_ROOT)/.venv/bin/coverage xml
+	$(REPO_ROOT)/.venv/bin/coverage report -m
 
 ## Formatting
 #####################################################################
 
 .PHONY: format
-format: json-format md-format yaml-format ## Format all files
+format: json-format md-format py-format yaml-format ## Format all files
 
 .PHONY: json-format
 json-format: $(REPO_ROOT)/node_modules/.installed ## Format JSON files.
@@ -80,6 +88,20 @@ md-format: $(REPO_ROOT)/node_modules/.installed ## Format Markdown files.
 		--write \
 		$${files}
 
+.PHONY: py-format
+py-format: $(AQUA_ROOT_DIR)/.installed ## Format Python files.
+	@echo "Formatting Python files..."
+	files=$$(
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done
+	)
+	if [ "$${files}" == "" ]; then
+		exit 0
+	fi
+	ruff check --select I --fix $${files}
+	ruff format $${files}
+
 .PHONY: yaml-format
 yaml-format: $(REPO_ROOT)/node_modules/.installed ## Format YAML files.
 	@echo "Formatting YAML files..."
@@ -105,7 +127,7 @@ yaml-format: $(REPO_ROOT)/node_modules/.installed ## Format YAML files.
 #####################################################################
 
 .PHONY: lint
-lint: actionlint checkmake commitlint fixme format-check markdownlint renovate-config-validator textlint yamllint zizmor ## Run all linters.
+lint: actionlint checkmake commitlint fixme format-check markdownlint mypy renovate-config-validator ruff textlint yamllint zizmor ## Run all linters.
 
 .PHONY: actionlint
 actionlint: $(AQUA_ROOT_DIR)/.installed ## Runs the actionlint linter.
@@ -230,11 +252,43 @@ markdownlint: $(REPO_ROOT)/node_modules/.installed $(AQUA_ROOT_DIR)/.installed #
 	fi
 	./node_modules/.bin/markdownlint-cli2 $${files}
 
+.PHONY: mypy
+mypy: $(REPO_ROOT)/.venv/.installed ## Runs the mypy type checker.
+	@echo "Running mypy..."
+	files=$$(
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done
+	)
+	if [ "$${files}" == "" ]; then
+		exit 0
+	fi
+	${REPO_ROOT}/.venv/bin/mypy \
+		--config-file mypy.ini \
+		$${files}
+
 .PHONY: renovate-config-validator
 renovate-config-validator: $(REPO_ROOT)/node_modules/.installed ## Validate Renovate configuration.
 	@echo "Validating Renovate configuration..."
 	./node_modules/.bin/renovate-config-validator \
 		--strict
+
+.PHONY: ruff
+ruff: $(AQUA_ROOT_DIR)/.installed ## Runs the ruff linter.
+	@echo "Running ruff..."
+	files=$$(
+		git ls-files --deduplicate \
+			'*.py' \
+			| while IFS='' read -r f; do [ -f "$${f}" ] && echo "$${f}" || true; done
+	)
+	if [ "$${files}" == "" ]; then
+		exit 0
+	fi
+	if [ "$(OUTPUT_FORMAT)" == "github" ]; then
+		ruff check --output-format=github $${files}
+	else
+		ruff check $${files}
+	fi
 
 .PHONY: textlint
 textlint: $(REPO_ROOT)/node_modules/.installed $(AQUA_ROOT_DIR)/.installed ## Runs the textlint linter.
@@ -373,3 +427,9 @@ clean: clean-node-modules ## Delete temporary files.
 	$(RM) -r .venv
 	$(RM) -r .uv
 	$(RM) *.sarif.json
+	$(RM) -r dist/
+	$(RM) -r *.egg-info/
+	$(RM) -r .coverage
+	$(RM) -r coverage.xml
+	python -Bc "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[cod]')]"
+	python -Bc "import pathlib; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"
