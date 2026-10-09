@@ -1,12 +1,16 @@
 {
+  // Renovate configuration for updating dependencies.
+
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
     // Use the best-practices preset. Adds options to pin dependencies.
     // https://docs.renovatebot.com/upgrade-best-practices/#whats-in-the-configbest-practices-preset
     "config:best-practices",
 
-    // Update dependencies monthly
-    "schedule:monthly",
+    // Update dependencies quarterly. This strikes a balance between keeping
+    // dependencies up to date and avoiding too many PRs across many
+    // repositories.
+    "schedule:quarterly",
 
     // Add DCO sign-off
     ":gitSignOff",
@@ -20,8 +24,8 @@
     "customManagers:makefileVersions",
   ],
   // NOTE: Set the prHourlyLimit to 0 to disable the hourly limit. This is done
-  // because we are using a monthly schedule and the default hourly limit of 2
-  // would cause Renovate to only create 2 PRs every month.
+  // because we are using a schedule and the default hourly limit of 2
+  // would cause Renovate to only create 2 PRs every cycle.
   // Similarly set prConcurrentLimit to 0 to disable the concurrent PR limit.
   prHourlyLimit: 0,
   prConcurrentLimit: 0,
@@ -40,6 +44,7 @@
   // https://blog.yossarian.net/2025/11/21/We-should-all-be-using-dependency-cooldowns
   // https://docs.renovatebot.com/configuration-options/#minimumreleaseage
   minimumReleaseAge: "14 days",
+
   // internalChecksFilter suppress PR creation for dependencies that were
   // released within minimumReleaseAge.
   // strict: All pending releases will be filtered. PRs will be skipped unless a
@@ -51,14 +56,18 @@
   // to date.
   lockFileMaintenance: {
     enabled: true,
-    // NOTE: Same as schedule:monthly preset.
+    // NOTE: Same as schedule:monthly preset. This is done because lock file
+    //       maintenance will catch security updates in transitive dependencies.
+    // TODO(github.com/ianlewis/repo-template/issues/570): Update schedule when
+    // security updates for transitive dependencies is supported.
     schedule: ["* 0-3 1 * *"],
   },
 
   // Enable git submodule updates.
   "git-submodules": {
     enabled: true,
-    // NOTE: Same as schedule:monthly preset.
+    // NOTE: Same as schedule:monthly preset. We do this more often than the
+    //       default because we want to ensure that we get security updates.
     schedule: ["* 0-3 1 * *"],
   },
 
@@ -68,11 +77,16 @@
   configWarningReuseIssue: false,
 
   // Group various ecosystem updates. Security updates are always separate.
+  // As a general rule, we automatically merge minor and patch updates for
+  // development dependencies since they should have minimal impact on the
+  // repository. This could be extended to include other dependencies if they
+  // are relatively low risk.
   packageRules: [
     {
       groupName: "aqua",
       matchUpdateTypes: ["minor", "patch"],
       matchFileNames: [".aqua.yaml", ".aqua-checksums.yaml"],
+
       automerge: true,
       platformAutomerge: true,
     },
@@ -80,6 +94,7 @@
       groupName: "makefile",
       matchUpdateTypes: ["minor", "patch"],
       matchFileNames: ["Makefile"],
+
       automerge: true,
       platformAutomerge: true,
     },
@@ -88,6 +103,7 @@
       matchManagers: ["github-actions"],
       matchUpdateTypes: ["minor", "patch"],
       pinDigests: true,
+
       automerge: true,
       platformAutomerge: true,
     },
@@ -96,21 +112,41 @@
       matchManagers: ["pep621"],
       matchUpdateTypes: ["minor", "patch"],
       matchDepTypes: [
-        "requires-python",
+        "build-system.requires",
         "project.dependencies",
         "project.optional-dependencies",
-        "dependency-groups",
+        "requires-python",
       ],
+    },
+    // NOTE: dependency-groups (PEP 725) in pep621 are sometimes used to specify
+    //       development dependencies. However, they sometimes also include
+    //       non-development dependencies. Development dependencies are usually
+    //       specified in a dependency-group named 'dev' so we check for that
+    //       name.
+    // See: https://docs.renovatebot.com/modules/manager/pep621/
+    {
+      groupName: "python",
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["minor", "patch"],
+      matchDepTypes: ["dependency-groups"],
+      matchJsonata: ["managerData.depGroup != 'dev'"],
     },
     {
       groupName: "python dev",
       matchManagers: ["pep621"],
       matchUpdateTypes: ["minor", "patch"],
-      matchDepTypes: [
-        "build-system.requires",
-        "tool.pdm.dev-dependencies",
-        "tool.uv.dev-dependencies",
-      ],
+      matchDepTypes: ["tool.pdm.dev-dependencies", "tool.uv.dev-dependencies"],
+
+      automerge: true,
+      platformAutomerge: true,
+    },
+    {
+      groupName: "python dev",
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["minor", "patch"],
+      matchDepTypes: ["dependency-groups"],
+      matchJsonata: ["managerData.depGroup = 'dev'"],
+
       automerge: true,
       platformAutomerge: true,
     },
@@ -119,6 +155,7 @@
       matchManagers: ["pip_requirements"],
       matchUpdateTypes: ["minor", "patch"],
       matchFileNames: ["requirements-dev.txt"],
+
       automerge: true,
       platformAutomerge: true,
     },
@@ -133,6 +170,7 @@
       matchManagers: ["npm"],
       matchDepTypes: ["devDependencies"],
       matchUpdateTypes: ["minor", "patch"],
+
       automerge: true,
       platformAutomerge: true,
     },
