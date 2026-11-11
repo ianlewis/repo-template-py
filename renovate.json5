@@ -93,7 +93,7 @@
     {
       groupName: "makefile",
       matchUpdateTypes: ["minor", "patch"],
-      matchFileNames: ["Makefile"],
+      matchFileNames: ["**/Makefile", "**/*.mk"],
 
       automerge: true,
       platformAutomerge: true,

@@ -376,7 +376,7 @@ The following tools should be added to the required code scanning results.
       pinning the version of GitHub Actions to help mitigate the risk of a bad
       actor adding malware to the action's repository.
 
-#### Copilot / Cloud Agent
+#### Copilot / Internet access
 
 If you use GitHub Copilot in your repository, it is recommended to enable the
 following settings:
@@ -400,10 +400,12 @@ following settings:
        alerts](https://docs.renovatebot.com/configuration-options/#vulnerabilityalerts)
        feature.
 
-##### Code Scanning
+##### Code Security
 
-1. [ ] **CodeQL analysis:**
-       Make sure "GitHub Actions (Public Preview)" is enabled in languages.
+1. [ ] **Tools:**
+    - [ ] **CodeQL analysis:** Make sure "GitHub Actions (Public Preview)" is
+          enabled in languages in addition to the relevant languages in the
+          repository.
 2. [ ] **Protection rules:**
     - [ ] **Security alert severity level:** Errors and warnings
     - [ ] **Standard alert severity level:** Errors and warnings
