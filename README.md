@@ -101,7 +101,7 @@ including them as project-local dependencies.
     - [`git`]: For repository management.
     - `awk`, `basename`, `bash`, `dirname`, `grep`, `head`, `mktemp`, `rm`,
       `sha256sum`, `uname`: Standard Unix tools (GNU version).
-    - GNU `make` >= 3.82: For running commands.
+    - GNU `make` >= 4.0: For running commands.
     - `curl`, `tar`, `gzip`: For extracting archives.
 
     On macOS you can install the required packages with Homebrew.
